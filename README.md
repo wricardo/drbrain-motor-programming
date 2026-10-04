@@ -2,6 +2,8 @@
 
 **Motor Programming** is the first game in the **Dr Brain** collection of reimplemented brain games (each Dr Brain game lives in its own repo; this one is `drbrain-motor-programming`, and the Go module and binary use the same name). A robot stands on a grid with rocks and treats. Fill a **main tape** and up to three **subroutine tapes** with instructions; the robot runs them step by step. Collect every treat to win.
 
+**Play it live:** https://motor-programming.wricardo.net/
+
 Built on the same architecture as `tesla-road-trip-game`: pure engine → session manager → one `GameService` facade → GraphQL (gqlgen + subscriptions) → SvelteKit UI. Maps are JSON files, sessions are persisted one file each, spectators watch through a GraphQL subscription.
 
 Rules = drbrain2 plus two extensions: per-map grid / tape configuration, and nested (optionally recursive) subroutine calls.
