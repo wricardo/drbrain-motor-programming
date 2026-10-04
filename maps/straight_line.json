@@ -1,0 +1,25 @@
+{
+  "id": "straight_line",
+  "name": "Level 1 - Straight Line",
+  "description": "Walk straight to the treat. Learn the basic instructions.",
+  "difficulty": "easy",
+  "layout": [
+    "..........",
+    "..........",
+    "..........",
+    "..#.......",
+    ".......#..",
+    "..........",
+    "..........",
+    "..........",
+    ".>......*.",
+    ".........."
+  ],
+  "main_tape_length": 8,
+  "sub_tape_lengths": [
+    4
+  ],
+  "max_steps": 200,
+  "max_call_depth": 16,
+  "allow_recursion": false
+}

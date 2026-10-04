@@ -1,0 +1,26 @@
+{
+  "id": "rock_obstacle",
+  "name": "Level 3 - Rock Obstacle",
+  "description": "A wall of rocks blocks the way. Go around it.",
+  "difficulty": "easy",
+  "layout": [
+    "..........",
+    "..........",
+    "..........",
+    ".....#....",
+    ".....#....",
+    ".>...#..*.",
+    ".....#....",
+    ".....#....",
+    "..........",
+    ".........."
+  ],
+  "main_tape_length": 12,
+  "sub_tape_lengths": [
+    10,
+    10
+  ],
+  "max_steps": 200,
+  "max_call_depth": 16,
+  "allow_recursion": false
+}

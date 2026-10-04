@@ -1,0 +1,27 @@
+{
+  "id": "symmetric_paths",
+  "name": "Level 4 - Symmetric Paths",
+  "description": "Four treats in the corners guarded by a cross of rocks.",
+  "difficulty": "easy",
+  "layout": [
+    "..........",
+    ".*.......*",
+    ".....#....",
+    "..........",
+    "..........",
+    "..#..^..#.",
+    "..........",
+    "..........",
+    ".....#....",
+    ".*.......*"
+  ],
+  "main_tape_length": 13,
+  "sub_tape_lengths": [
+    6,
+    6,
+    6
+  ],
+  "max_steps": 200,
+  "max_call_depth": 16,
+  "allow_recursion": false
+}

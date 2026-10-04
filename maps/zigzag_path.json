@@ -1,0 +1,27 @@
+{
+  "id": "zigzag_path",
+  "name": "Level 5 - Zigzag Path",
+  "description": "Five treats in a zigzag with very short tapes.",
+  "difficulty": "medium",
+  "layout": [
+    "...*..*...",
+    "..........",
+    "..........",
+    ">..*..*.*.",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    ".........."
+  ],
+  "main_tape_length": 6,
+  "sub_tape_lengths": [
+    4,
+    4,
+    4
+  ],
+  "max_steps": 200,
+  "max_call_depth": 16,
+  "allow_recursion": false
+}

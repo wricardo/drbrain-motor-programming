@@ -1,0 +1,20 @@
+{
+  "id": "powers",
+  "name": "Patterns 2 - Powers",
+  "description": "A walled tunnel nineteen cells long and almost no slots. Each subroutine can repeat the one below it, so nest them.",
+  "difficulty": "medium",
+  "layout": [
+    "####################",
+    ">..................*",
+    "####################"
+  ],
+  "main_tape_length": 2,
+  "sub_tape_lengths": [
+    2,
+    3,
+    3
+  ],
+  "max_steps": 60,
+  "max_call_depth": 4,
+  "allow_recursion": false
+}

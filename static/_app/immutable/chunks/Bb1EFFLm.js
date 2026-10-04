@@ -1,0 +1,1 @@
+async function e(e){let t=await e.toPromise();if(t.error)throw t.error;if(!t.data)throw Error(`Empty response from server`);return t.data}export{e as t};

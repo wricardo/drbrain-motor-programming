@@ -1,0 +1,25 @@
+{
+  "id": "staircase",
+  "name": "Recursion 2 - Staircase",
+  "description": "Climb the diagonal staircase. Recurse a move-turn-move-turn pattern.",
+  "difficulty": "hard",
+  "layout": [
+    ".........*",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "....*.....",
+    "..........",
+    "..........",
+    "..........",
+    ">........."
+  ],
+  "main_tape_length": 3,
+  "sub_tape_lengths": [
+    5
+  ],
+  "max_steps": 60,
+  "max_call_depth": 10,
+  "allow_recursion": true
+}

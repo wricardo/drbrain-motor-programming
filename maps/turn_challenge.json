@@ -1,0 +1,26 @@
+{
+  "id": "turn_challenge",
+  "name": "Level 2 - Turn Challenge",
+  "description": "Two treats and a turn. Subroutines save tape slots.",
+  "difficulty": "easy",
+  "layout": [
+    "..........",
+    "........*.",
+    "..###.....",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    ".>......*.",
+    ".........."
+  ],
+  "main_tape_length": 10,
+  "sub_tape_lengths": [
+    5,
+    5
+  ],
+  "max_steps": 200,
+  "max_call_depth": 16,
+  "allow_recursion": false
+}

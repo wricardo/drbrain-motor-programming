@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wricardo/drbrain-motor-programming/map-schema.json",
+  "title": "drbrain-motor-programming map",
+  "description": "Map file (maps/<id>.json). Coordinates: x = column, y = row, row 0 is the top of layout (y grows downward). Glyphs: '.' empty, '#' rock, '*' treat, '^' '>' 'v' '<' start cell facing up/right/down/left (exactly one). At least one treat. All rows must have the same length.",
+  "type": "object",
+  "required": ["id", "name", "layout"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]{1,64}$",
+      "description": "Must match the file name (without .json)."
+    },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "difficulty": { "type": "string", "default": "easy", "examples": ["easy", "medium", "hard"] },
+    "layout": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "pattern": "^[.#*^>v<]{3,20}$"
+      }
+    },
+    "main_tape_length": { "type": "integer", "minimum": 1, "maximum": 32, "default": 10 },
+    "sub_tape_lengths": {
+      "type": "array",
+      "maxItems": 3,
+      "default": [10],
+      "items": { "type": "integer", "minimum": 1, "maximum": 16 }
+    },
+    "max_steps": { "type": "integer", "minimum": 1, "maximum": 10000, "default": 200 },
+    "max_call_depth": { "type": "integer", "minimum": 1, "maximum": 64, "default": 16 },
+    "allow_recursion": { "type": "boolean", "default": false }
+  }
+}

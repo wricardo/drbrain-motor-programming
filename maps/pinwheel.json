@@ -1,0 +1,27 @@
+{
+  "id": "pinwheel",
+  "name": "Patterns 3 - Pinwheel",
+  "description": "Four arms, four treats. Walking one arm and ending up facing the next is a unit you can repeat.",
+  "difficulty": "hard",
+  "layout": [
+    "###########",
+    "#####*#####",
+    "#####.#####",
+    "#####.#####",
+    "#####.#####",
+    "#*...^...*#",
+    "#####.#####",
+    "#####.#####",
+    "#####.#####",
+    "#####*#####",
+    "###########"
+  ],
+  "main_tape_length": 4,
+  "sub_tape_lengths": [
+    4,
+    5
+  ],
+  "max_steps": 100,
+  "max_call_depth": 4,
+  "allow_recursion": false
+}

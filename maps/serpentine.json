@@ -1,0 +1,26 @@
+{
+  "id": "serpentine",
+  "name": "Patterns 1 - Serpentine",
+  "description": "A five-row snake with five treats and very few slots. Rows and U-turns repeat, so build small subs and let bigger subs call them.",
+  "difficulty": "hard",
+  "layout": [
+    ">........*",
+    "#########.",
+    "*.........",
+    ".#########",
+    ".........*",
+    "#########.",
+    "*.........",
+    ".#########",
+    ".........*"
+  ],
+  "main_tape_length": 7,
+  "sub_tape_lengths": [
+    3,
+    7,
+    7
+  ],
+  "max_steps": 120,
+  "max_call_depth": 4,
+  "allow_recursion": false
+}

@@ -1,0 +1,18 @@
+{
+  "id": "long_corridor",
+  "name": "Recursion 1 - Long Corridor",
+  "description": "A 16-cell corridor and only a handful of slots. A subroutine that calls itself walks the whole way.",
+  "difficulty": "medium",
+  "layout": [
+    "................",
+    ">..............*",
+    "................"
+  ],
+  "main_tape_length": 3,
+  "sub_tape_lengths": [
+    2
+  ],
+  "max_steps": 60,
+  "max_call_depth": 20,
+  "allow_recursion": true
+}

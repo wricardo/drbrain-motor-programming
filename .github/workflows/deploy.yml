@@ -1,0 +1,91 @@
+name: Deploy
+
+"on":
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Test, Build and Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - run: go vet ./...
+      - run: go test ./...
+
+      # The SvelteKit UI is prebuilt and committed in static/.
+      - name: Build binary (linux/arm64)
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o /tmp/drbrain-motor-programming .
+
+      - name: Package
+        run: |
+          mkdir -p /tmp/pkg
+          cp /tmp/drbrain-motor-programming /tmp/pkg/
+          cp -r maps static /tmp/pkg/
+          tar czf /tmp/deploy.tgz -C /tmp/pkg .
+
+      - name: Setup SSH
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          : "${EC2_HOST:?missing EC2_HOST secret}"
+          : "${EC2_SSH_KEY:?missing EC2_SSH_KEY secret}"
+          : "${EC2_KNOWN_HOSTS:?missing EC2_KNOWN_HOSTS secret}"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$EC2_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host deploy
+            HostName $EC2_HOST
+            User ubuntu
+            IdentityFile ~/.ssh/deploy_key
+            BatchMode yes
+            StrictHostKeyChecking yes
+          EOF
+
+      - name: Upload
+        run: scp /tmp/deploy.tgz deploy:/tmp/drbrain-motor-programming-deploy.tgz
+
+      # Systemd unit, nginx vhost and /opt/drbrain-motor-programming/.env are
+      # provisioned once on the host; this step only swaps the release.
+      # sessions/ and .env are preserved.
+      - name: Install and restart
+        run: |
+          ssh deploy '
+            set -euo pipefail
+            cd /opt/drbrain-motor-programming
+            rm -rf maps static
+            tar xzf /tmp/drbrain-motor-programming-deploy.tgz -C .
+            rm -f /tmp/drbrain-motor-programming-deploy.tgz
+            mkdir -p sessions
+            sudo systemctl restart drbrain-motor-programming.service
+            systemctl is-active drbrain-motor-programming.service
+          '
+
+      - name: Smoke test
+        run: |
+          ssh deploy '
+            for attempt in $(seq 1 12); do
+              if curl -fsS http://127.0.0.1:8086/graphql \
+                -H "content-type: application/json" \
+                --data "{\"query\":\"query { maps { id } }\"}" | grep -q "\"maps\""; then
+                exit 0
+              fi
+              sleep 5
+            done
+            exit 1
+          '

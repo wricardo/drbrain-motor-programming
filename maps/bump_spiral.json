@@ -1,0 +1,24 @@
+{
+  "id": "bump_spiral",
+  "name": "Recursion 3 - Bump Spiral",
+  "description": "A one-cell-wide spiral with a treat at the centre. Walking into a wall costs a step but does nothing else, so one repeating pattern can follow every side.",
+  "difficulty": "hard",
+  "layout": [
+    ">........",
+    "########.",
+    ".......#.",
+    ".#####.#.",
+    ".#..*#.#.",
+    ".#.###.#.",
+    ".#.....#.",
+    ".#######.",
+    "........."
+  ],
+  "main_tape_length": 3,
+  "sub_tape_lengths": [
+    10
+  ],
+  "max_steps": 150,
+  "max_call_depth": 10,
+  "allow_recursion": true
+}

@@ -1,0 +1,192 @@
+scalar Time
+
+enum Instruction {
+  EMPTY
+  TURN_LEFT
+  TURN_RIGHT
+  MOVE_FORWARD
+  CALL_SUB_1
+  CALL_SUB_2
+  CALL_SUB_3
+}
+
+enum Facing {
+  UP
+  RIGHT
+  DOWN
+  LEFT
+}
+
+enum Status {
+  READY
+  RUNNING
+  WON
+  LOST
+}
+
+enum LossReason {
+  STEP_LIMIT
+  CALL_DEPTH
+  PROGRAM_ENDED
+}
+
+enum SessionSort {
+  RECENT
+  CREATED
+}
+
+type Position {
+  x: Int!
+  y: Int!
+}
+
+type Frame {
+  "Tape index; -1 is the main tape."
+  tape: Int!
+  "Index of the next instruction to run on that tape."
+  pc: Int!
+}
+
+type Map {
+  id: ID!
+  name: String!
+  description: String!
+  difficulty: String!
+  width: Int!
+  height: Int!
+  layout: [String!]!
+  start: Position!
+  startFacing: Facing!
+  rocks: [Position!]!
+  treats: [Position!]!
+  mainTapeLength: Int!
+  subTapeLengths: [Int!]!
+  maxSteps: Int!
+  maxCallDepth: Int!
+  allowRecursion: Boolean!
+}
+
+type Program {
+  main: [Instruction!]!
+  subs: [[Instruction!]!]!
+}
+
+input ProgramInput {
+  main: [Instruction!]!
+  subs: [[Instruction!]!]!
+}
+
+type VMState {
+  pos: Position!
+  facing: Facing!
+  treatsRemaining: [Position!]!
+  "Bottom frame is main; the last frame is the active tape."
+  callStack: [Frame!]!
+  steps: Int!
+  status: Status!
+  lossReason: LossReason
+  visited: [Position!]!
+}
+
+type StepEvent {
+  step: Int!
+  instruction: Instruction!
+  tapeIndex: Int!
+  slotIndex: Int!
+  from: Position!
+  to: Position!
+  facingBefore: Facing!
+  facingAfter: Facing!
+  blocked: Boolean!
+  collected: Position
+  callStack: [Frame!]!
+  status: Status!
+  lossReason: LossReason
+}
+
+type Session {
+  id: ID!
+  displayName: String!
+  mapId: ID!
+  "Snapshot of the map taken when the session was created."
+  map: Map!
+  program: Program!
+  vm: VMState!
+  playing: Boolean!
+  speedMs: Int!
+  "Increments on every state change; clients ignore updates with seq <= last seen."
+  seq: Int!
+  createdAt: Time!
+  lastActionAt: Time!
+  attempts: Int!
+  bestSteps: Int
+  lastEvent: StepEvent
+}
+
+type SessionUpdate {
+  seq: Int!
+  session: Session!
+  event: StepEvent
+}
+
+type SimulationResult {
+  status: Status!
+  lossReason: LossReason
+  steps: Int!
+  finalState: VMState!
+  events: [StepEvent!]
+}
+
+type MapValidationIssue {
+  message: String!
+}
+
+type MapValidationResult {
+  valid: Boolean!
+  issues: [MapValidationIssue!]!
+  "Cells reachable check result: treats unreachable from start."
+  unreachableTreats: [Position!]!
+}
+
+input MapInput {
+  id: ID!
+  name: String!
+  description: String
+  difficulty: String
+  layout: [String!]!
+  mainTapeLength: Int
+  subTapeLengths: [Int!]
+  maxSteps: Int
+  maxCallDepth: Int
+  allowRecursion: Boolean
+}
+
+type Query {
+  maps: [Map!]!
+  map(id: ID!): Map
+  session(id: ID!): Session
+  sessions(sort: SessionSort = RECENT, limit: Int = 50, mapId: ID): [Session!]!
+  simulate(mapID: ID!, program: ProgramInput!, includeEvents: Boolean = false): SimulationResult!
+}
+
+type Mutation {
+  createSession(mapID: ID!, displayName: String): Session!
+  deleteSession(id: ID!): Boolean!
+  renameSession(id: ID!, displayName: String!): Session!
+  setProgram(sessionID: ID!, program: ProgramInput!): Session!
+  run(sessionID: ID!, speedMs: Int = 500): Session!
+  pause(sessionID: ID!): Session!
+  step(sessionID: ID!): Session!
+  reset(sessionID: ID!): Session!
+
+  "Admin (X-Admin-Key) mutations."
+  createMap(map: MapInput!): Map!
+  updateMap(map: MapInput!): Map!
+  deleteMap(id: ID!): Boolean!
+  validateMap(map: MapInput!): MapValidationResult!
+}
+
+type Subscription {
+  "Emits the current snapshot immediately, then every change."
+  sessionUpdated(sessionID: ID!): SessionUpdate!
+}

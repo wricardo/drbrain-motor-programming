@@ -1,0 +1,29 @@
+schema:
+  - graph/schema.graphqls
+
+exec:
+  filename: graph/generated/generated.go
+  package: generated
+
+model:
+  filename: graph/model/models_gen.go
+  package: model
+
+resolver:
+  layout: follow-schema
+  dir: graph
+  package: graph
+  filename_template: "{name}.resolvers.go"
+
+# Schema types are generated into graph/model as plain data carriers; the
+# conversion from engine/service types lives in graph/convert.go. Only scalars
+# are bound to existing Go types.
+models:
+  ID:
+    model:
+      - github.com/99designs/gqlgen/graphql.ID
+      - github.com/99designs/gqlgen/graphql.IntID
+      - github.com/99designs/gqlgen/graphql.Int64ID
+      - github.com/99designs/gqlgen/graphql.Int32ID
+  Time:
+    model: github.com/99designs/gqlgen/graphql.Time

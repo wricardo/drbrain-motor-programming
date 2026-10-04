@@ -1,0 +1,139 @@
+# Dr Brain - Motor Programming — LLM Guide
+
+Dr Brain - Motor Programming (the first game in the Dr Brain collection) is a robot programming puzzle for humans and AI agents. A robot stands on a grid with
+rocks and treats. You fill a main tape and a few subroutine tapes with instructions; the robot
+runs them one step at a time. Collect every treat to win.
+
+Humans: open {{.BaseURL}}/ , pick a map and press Run. Tutorial: {{.BaseURL}}/learn
+Spectate a session live: {{.BaseURL}}/watch/SESSION_ID
+
+GraphQL endpoint:       POST {{.BaseURL}}/graphql
+GraphQL subscriptions:  {{.WSURL}}/graphql  (graphql-ws protocol)
+Playground:             GET  {{.BaseURL}}/playground
+Introspection:          enabled unless the operator disabled it — query __schema/__type
+
+Every example below is valid against the live schema. Replace SESSION_ID with an id returned by
+createSession and MAP_ID with an id from the `maps` query.
+
+---
+
+## Rules
+
+- A session is one run of one map. The map is snapshotted when the session is created.
+- A program is one `main` tape plus N `subs` tapes. Tape lengths are fixed per map
+  (`mainTapeLength`, `subTapeLengths`); `setProgram` requires exactly those lengths. Pad with
+  EMPTY.
+- Execution is one instruction per step. EMPTY slots are skipped for free (not a step). When a
+  sub tape ends, control returns to the caller. When the main tape ends the program is over.
+- The robot wins the moment the last treat is collected (a win beats the step limit on the same
+  step). Otherwise it loses with a `lossReason`:
+  - STEP_LIMIT      — `steps` reached the map's `maxSteps`
+  - CALL_DEPTH      — more than `maxCallDepth` calls in flight
+  - PROGRAM_ENDED   — main tape finished with treats left
+- MOVE_FORWARD into a rock or off the map is a silent no-op (still a step, `blocked: true`).
+- Collecting happens on arrival; the start cell never holds a treat.
+- A CALL_SUB_k that targets an already active sub (or one anywhere on the call stack) does
+  nothing (still counts as a step) unless the map has `allowRecursion: true`.
+- `setProgram` and `reset` put the robot back at the start. `setProgram` is rejected while the
+  session is playing (`SESSION_PLAYING`). Terminal sessions (WON/LOST) refuse run/step until
+  `reset` (`SESSION_TERMINAL`).
+
+### Instructions
+
+| value        | effect                                             |
+|--------------|----------------------------------------------------|
+| EMPTY        | skipped, costs nothing                             |
+| TURN_LEFT    | rotate 90 degrees counter-clockwise                |
+| TURN_RIGHT   | rotate 90 degrees clockwise                        |
+| MOVE_FORWARD | move one cell in the facing direction              |
+| CALL_SUB_1   | run subroutine tape 1 (`subs[0]`), then come back  |
+| CALL_SUB_2   | run subroutine tape 2 (`subs[1]`)                  |
+| CALL_SUB_3   | run subroutine tape 3 (`subs[2]`)                  |
+
+CALL_SUB_k is only valid when the map has at least k sub tapes.
+
+### Coordinates
+
+- `x` is the column, `y` is the row. Row 0 is the TOP row of `layout`; `y` grows DOWNWARD.
+- Facing: UP = y-1, RIGHT = x+1, DOWN = y+1, LEFT = x-1.
+- `layout` glyphs: `.` empty, `#` rock, `*` treat, `^ > v <` start cell and initial facing.
+- Frame `tape: -1` is the main tape; `pc` is the index of the next instruction on that tape.
+  The last entry of `callStack` is the active tape.
+
+### Errors
+
+Errors carry `extensions.code`: NOT_FOUND, INVALID_PROGRAM, SESSION_PLAYING, SESSION_TERMINAL,
+INVALID_ARGUMENT, FORBIDDEN, LIMIT_REACHED. Admin mutations need an `X-Admin-Key` header.
+
+---
+
+## Quick start
+
+1. List maps:
+
+```graphql
+query { maps { id name difficulty width height layout mainTapeLength subTapeLengths maxSteps allowRecursion } }
+```
+
+2. Create a session:
+
+```graphql
+mutation { createSession(mapID: "straight_line", displayName: "my bot") { id map { mainTapeLength subTapeLengths } } }
+```
+
+3. Dry run without a session (instant, optional `includeEvents` for the full trace):
+
+```graphql
+query {
+  simulate(mapID: "straight_line", includeEvents: false, program: {
+    main: [MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, EMPTY]
+    subs: [[EMPTY, EMPTY, EMPTY, EMPTY]]
+  }) { status lossReason steps finalState { pos { x y } treatsRemaining { x y } } }
+}
+```
+
+4. Store the program in your session (resets the robot):
+
+```graphql
+mutation {
+  setProgram(sessionID: "SESSION_ID", program: {
+    main: [MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, EMPTY]
+    subs: [[EMPTY, EMPTY, EMPTY, EMPTY]]
+  }) { id vm { status steps } }
+}
+```
+
+5. Run it on the server (50–5000 ms per step) or step manually:
+
+```graphql
+mutation { run(sessionID: "SESSION_ID", speedMs: 100) { playing vm { status steps } } }
+```
+
+```graphql
+mutation { step(sessionID: "SESSION_ID") { vm { status steps pos { x y } } lastEvent { instruction blocked } } }
+```
+
+6. Poll or subscribe for the result:
+
+```graphql
+query { session(id: "SESSION_ID") { playing seq bestSteps attempts vm { status lossReason steps treatsRemaining { x y } callStack { tape pc } } } }
+```
+
+```graphql
+subscription { sessionUpdated(sessionID: "SESSION_ID") { seq event { step instruction } session { playing vm { status steps pos { x y } facing } } } }
+```
+
+The subscription emits the current snapshot immediately, then every change. Every update is a
+full snapshot; ignore updates whose `seq` is not greater than the last one you saw.
+
+Other session mutations: `pause`, `reset`, `renameSession(id, displayName)`,
+`deleteSession(id)`. Query `sessions(sort: RECENT, limit: 50, mapId: "...")` lists sessions.
+
+---
+
+## Tips
+
+- Simulate before you commit: `simulate` costs nothing and returns the trace.
+- Subroutines are reusable loops: put `CALL_SUB_1` as the last slot of `subs[0]` on a map with
+  `allowRecursion: true` to repeat it until a limit or the win.
+- `bestSteps` is the fewest steps among winning runs of this session.
