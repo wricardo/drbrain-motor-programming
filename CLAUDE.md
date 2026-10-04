@@ -1,8 +1,31 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Dr Brain - Motor Programming (`drbrain-motor-programming`) — agent guide
 
 Brand: **Dr Brain** is the family of reimplemented brain games and **Motor Programming** is this game. Every game lives in its own repo; this repo, its Go module path (`github.com/wricardo/drbrain-motor-programming`) and the server binary share the name `drbrain-motor-programming`. `localStorage` keys use that prefix too (the home page still reads the old `drbrain3.displayName` key once as a fallback). User-facing names live in `frontend/src/lib/brand.ts`, `llms.txt.tmpl` and the README (player-facing).
 
 Robot programming puzzle server + SvelteKit UI. Read `docs/DEVELOPMENT.md` for rules, map format and semantics (`README.md` is player-facing).
+
+## Commands
+
+```sh
+make dev                                   # go run . -port 8000 -debug (serves static/ UI too)
+make test                                  # go test -race ./...
+go test -race -run TestName ./game/engine  # single Go test
+make validate                              # maps + reference solutions (needs local solutions/)
+make lint                                  # golangci-lint
+make generate                              # gqlgen after schema edits
+cd frontend && npm run dev:local           # Vite UI against a local server on :8000
+cd frontend && npx vitest run src/lib/program.test.ts   # single frontend test
+```
+
+## Public repo, private solutions, auto-deploy
+
+- The repo is public. `README.md` is for players (humans and AI agents), not developers; technical docs go in `docs/DEVELOPMENT.md`. Never mention other local repos (sibling games, rule references) in any tracked file.
+- `solutions/` is gitignored and exists only locally. Never commit it or add solution content anywhere tracked. Solution-dependent tests in `validate/validate_test.go` skip via `requireSolutions` when it is absent (CI, fresh clones).
+- Every push to `main` deploys to https://motor-programming.wricardo.net via `.github/workflows/deploy.yml` (vet, test, linux/arm64 build, ship binary + `maps/` + `static/`). The UI is not built in CI, so a stale `static/` ships stale UI. Host-side setup (systemd unit `drbrain-motor-programming` on `127.0.0.1:8086`, nginx vhost, certbot TLS, `/opt/drbrain-motor-programming/.env` with `ADMIN_API_KEY`) is manual and not in the repo.
 
 ## Package map (dependency direction →)
 
