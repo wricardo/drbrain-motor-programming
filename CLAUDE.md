@@ -1,70 +1,58 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository. `AGENTS.md` is a symlink to this file, so other coding agents read the same guide.
 
-# Dr Brain - Motor Programming (`drbrain-motor-programming`) — agent guide
+## Dr Brain - Motor Programming
 
-Brand: **Dr Brain** is the family of reimplemented brain games and **Motor Programming** is this game. Every game lives in its own repo; this repo, its Go module path (`github.com/wricardo/drbrain-motor-programming`) and the server binary share the name `drbrain-motor-programming`. `localStorage` keys use that prefix too (the home page still reads the old `drbrain3.displayName` key once as a fallback). User-facing names live in `frontend/src/lib/brand.ts`, `llms.txt.tmpl` and the README (player-facing).
+Robot-programming puzzle game for humans and AI agents. Go server (pure rules engine → `GameService` → gqlgen GraphQL with subscriptions) serving a SvelteKit SPA. Repo, Go module (`github.com/wricardo/drbrain-motor-programming`) and binary share the name `drbrain-motor-programming`.
 
-Robot programming puzzle server + SvelteKit UI. Read `docs/DEVELOPMENT.md` for rules, map format and semantics (`README.md` is player-facing).
+**Full reference: [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)** — architecture, rules and engine semantics, map format and design, API, frontend, UI look and feel, configuration, deployment, maintenance workflows. Read the relevant section before non-trivial changes and keep it up to date when behavior changes. `README.md` is player-facing only.
 
 ## Commands
 
 ```sh
-make dev                                   # go run . -port 8000 -debug (serves static/ UI too)
+make dev                                   # go run . -port 8000 -debug (API + UI)
 make test                                  # go test -race ./...
 go test -race -run TestName ./game/engine  # single Go test
 make validate                              # maps + reference solutions (needs local solutions/)
-make lint                                  # golangci-lint
-make generate                              # gqlgen after schema edits
+make verify                                # gofmt, vet, lint (golangci-lint), test
+make generate                              # gqlgen after editing graph/schema.graphqls
+make build-frontend                        # build UI into static/ (committed)
+cd frontend && npm run check && npm test
+cd frontend && npx vitest run src/lib/grid.test.ts   # single frontend test
 cd frontend && npm run dev:local           # Vite UI against a local server on :8000
-cd frontend && npx vitest run src/lib/program.test.ts   # single frontend test
+scripts/smoke.sh 9191                      # end-to-end HTTP smoke
 ```
-
-## Public repo, private solutions, auto-deploy
-
-- The repo is public. `README.md` is for players (humans and AI agents), not developers; technical docs go in `docs/DEVELOPMENT.md`. Never mention other local repos (sibling games, rule references) in any tracked file.
-- `solutions/` is gitignored and exists only locally. Never commit it or add solution content anywhere tracked. Solution-dependent tests in `validate/validate_test.go` skip via `requireSolutions` when it is absent (CI, fresh clones).
-- Every push to `main` deploys to https://motor-programming.wricardo.net via `.github/workflows/deploy.yml` (vet, test, linux/arm64 build, ship binary + `maps/` + `static/`). The UI is not built in CI, so a stale `static/` ships stale UI. Host-side setup (systemd unit `drbrain-motor-programming` on `127.0.0.1:8086`, nginx vhost, certbot TLS, `/opt/drbrain-motor-programming/.env` with `ADMIN_API_KEY`) is manual and not in the repo.
-
-## Package map (dependency direction →)
-
-```
-game/engine      pure rules, no deps/IO: MapConfig/NewMap, Program, VMState (Settle/Step), Simulate, Run
-game/service     Session type, GameService facade + impl + Runner (ticker goroutine per playing session);
-                 interfaces MapStore, SessionStore, Broadcaster; coded errors
-game/config      MapStore impl: maps/*.json, RWMutex, atomic writes
-game/session     SessionStore impl: in-memory Manager + FilePersistence (sessions/<id>.json)
-transport/websocket  Hub: SubscribeSession fanout, latest-wins (no raw WS clients)
-validate         map checks, reachability, reference-solution check (+ cmd/validate)
-graph            gqlgen schema/resolvers, converters, subscription forwarder, admin gate
-api              HTTP mux, /graphql, /llms.txt, SPA serving (frontend → static/)
-main.go          flags, .env, wiring, graceful shutdown
-frontend/        SvelteKit (Svelte 5) + Tailwind v4, adapter-static → static/ (committed)
-maps/ solutions/ map-schema.json   data; solutions are never exposed by the API
-```
-
-`service` defines `Session`; `session` and `websocket` import `service`, never the reverse (the service talks to them through interfaces).
 
 ## Invariants — do not break
 
-- **Engine**: after `NewVMState` and after any program change call `vm.Settle(&program)`. `Step` mutates in place; use `Clone()` for anything leaving the lock. `Run`/internal `step(…, nil)` allocate no events.
-- **Locking**: live `*service.Session` is guarded by `Lock/Unlock`. Never broadcast or do I/O while holding it. Hub/resolvers only see `Clone()` snapshots. Don't hold the lock when calling `SessionStore.Persist`.
-- **Runner lifecycle**: `Playing` ⇔ a runner is registered. Stop paths (Pause, Reset, Delete, terminal tick, Shutdown) all go through one `detach`; never wait on a runner while holding the session lock.
-- **Delivery**: every broadcast carries a full snapshot + monotonically increasing `Seq`; hub drops the *oldest* queued update on a full buffer so terminal states are never lost. Subscription resolver emits the current snapshot first.
-- **Map snapshot**: sessions embed their own copy of the map; map edits/deletes must never touch existing sessions.
-- **Security**: map ids match `^[a-z0-9_-]{1,64}$` (they are filenames); session ids are validated before touching disk; admin mutations need `X-Admin-Key` == `ADMIN_API_KEY` (constant-time) unless `ALLOW_UNAUTHENTICATED_ADMIN=true`; `max_steps ≤ 10000`, `max_call_depth ≤ 64` bound `simulate`. Never add solutions to the GraphQL schema.
-- **Recursion rule**: calling a sub already on the call stack is a no-op when recursion is off (see `docs/DEVELOPMENT.md` "Engine semantics").
-- A zero-sub map (`sub_tape_lengths: []`) is valid and must survive JSON round trips (no `omitempty` on that field).
+- **Engine** (`game/engine`, no I/O): call `vm.Settle(&program)` after `NewVMState` and any program change. `Step` mutates in place; `Clone()` anything leaving a lock. `Run`/`step(…, nil)` allocate no events.
+- **Dependencies**: `game/service` defines `MapStore`, `SessionStore`, `Broadcaster`; implementations import `service`, never the reverse.
+- **Locking**: mutate pattern is lock → mutate → `touch` (seq++) → `Clone` → unlock → persist → broadcast. Never broadcast, do I/O, `Persist` or wait on a runner while holding a session lock. Lock order session → runner mutex.
+- **Runner lifecycle**: `Playing` ⇔ runner registered; every stop path goes through one `detach`.
+- **Delivery**: full snapshot + monotonic `Seq` on every broadcast; hub drops the *oldest* queued update and ignores `Seq` ≤ last published; subscription resolver emits the current snapshot first.
+- **Map snapshot**: sessions embed their own map copy; map edits/deletes never touch sessions. Map creation is atomic via `MapStore.Create`, never check-then-save.
+- **Security**: map ids `^[a-z0-9_-]{1,64}$` (filenames); session ids 16 lowercase hex, validated before disk; admin mutations need `X-Admin-Key` (constant-time) unless `ALLOW_UNAUTHENTICATED_ADMIN=true` with no key set; `max_steps ≤ 10000`, `max_call_depth ≤ 64`.
+- **Recursion off**: calling a sub already on the call stack is a no-op (still a step).
+- **Zero subs**: `sub_tape_lengths: []` ≠ omitted. No `omitempty`; never turn `[]` into `nil` (incl. `graph/convert.go`).
 
-## Workflows
+## Repo rules
 
-- Edit `graph/schema.graphqls` → `make generate` → update `graph/convert.go` / resolvers → mirror in `frontend/src/lib/{queries,types}.ts`.
-- New map: see `docs/DEVELOPMENT.md` "Adding a map"; `make validate` must pass.
-- Engine change: update golden step counts in `game/engine/engine_test.go` and `validate/validate_test.go` (7, 17, 19, 46, 23, 30, 44, 80, 32, 48, 83 for the shipped solutions; see the golden table in `validate/validate_test.go`) deliberately, never to make a failure disappear.
-- UI change: `cd frontend && npm run check && npm test && npm run build:static` (or `make build-frontend`), commit `static/`.
-- Don't run `go mod tidy` casually — `gqlgen generate` rewrites go.mod; re-`go get` any dropped deps.
+- **Public repo.** Never mention other local/private repos in tracked files. README stays player-facing.
+- **Solutions are private.** `solutions/` is gitignored and local only. Never commit it or put solution content in the schema, API, prompts, `/llms.txt` or `static/`. Solution-dependent tests skip via `requireSolutions` when it is absent.
+- **Push to `main` deploys** to https://motor-programming.wricardo.net (`.github/workflows/deploy.yml`). CI does not build the UI: rebuild and commit `static/` with every UI change.
+- `graph/generated`, `graph/model` are gqlgen output: don't hand-edit. Don't run `go mod tidy` casually (gqlgen rewrites `go.mod`; re-`go get` dropped deps).
 
-## Verification checklist
+## Change checklists
 
-`make verify` (or `go build ./... && go vet ./... && go test -race ./... && make validate`), then run `go run . -port 9191` and `scripts/smoke.sh 9191`; for UI changes load `/play/<id>` and `/watch/<id>` in a browser.
+- **Schema**: `graph/schema.graphqls` → `make generate` → `graph/convert.go` + resolvers → `frontend/src/lib/{queries,types}.ts` → `llms.txt.tmpl` / `lib/prompt.ts` if agents are affected → query copies in `api/hardening_test.go`.
+- **Engine**: update golden step counts in `game/engine/engine_test.go` and `validate/validate_test.go` (7, 17, 19, 46, 23, 30, 44, 80, 32, 48, 83) deliberately, never to hide a failure.
+- **New map**: `maps/<id>.json` + local `solutions/<id>.json` → `make validate` → golden step count in `validate/validate_test.go`.
+- **New page**: route under `frontend/src/routes/` + `spaRoutes` in `api/server.go` (+ nav in `+layout.svelte`).
+- **UI**: Svelte 5 runes only; follow "UI look and feel" in `docs/DEVELOPMENT.md` (instruction colors/glyphs/keys live in `lib/instructions.ts`, brand names in `lib/brand.ts`). Gotcha: explicit `onchange`/`oninput` run before `bind:value` updates — read `event.currentTarget.value`.
+
+## Testing
+
+Go: table tests + `t.Run`, no `t.Parallel()` (uses `t.Setenv`), always `-race`; service tests use `newEnv` (`game/service/helpers_test.go`) and `waitFor`, never fixed sleeps. Frontend: Vitest + jsdom + Testing Library; logic lives in tested `lib/*.ts` modules.
+
+**Before pushing**: `make verify && make validate`, `go run . -port 9191` + `scripts/smoke.sh 9191`; for UI changes open `/play/<id>` and `/watch/<id>` and run a program to the end.
