@@ -2,7 +2,7 @@
 
 Brand: **Dr Brain** is the family of reimplemented brain games and **Motor Programming** is this game. Every game lives in its own repo; this repo, its Go module path (`github.com/wricardo/drbrain-motor-programming`) and the server binary share the name `drbrain-motor-programming`. `localStorage` keys use that prefix too (the home page still reads the old `drbrain3.displayName` key once as a fallback). User-facing names live in `frontend/src/lib/brand.ts`, `llms.txt.tmpl` and the README (player-facing).
 
-Robot programming puzzle server + SvelteKit UI. Architecture copied from `../tesla-road-trip-game`; rules from `../drbrain2` (read-only references, never modify them). Read `docs/DEVELOPMENT.md` for rules, map format and semantics (`README.md` is player-facing).
+Robot programming puzzle server + SvelteKit UI. Read `docs/DEVELOPMENT.md` for rules, map format and semantics (`README.md` is player-facing).
 
 ## Package map (dependency direction →)
 
@@ -31,7 +31,7 @@ maps/ solutions/ map-schema.json   data; solutions are never exposed by the API
 - **Delivery**: every broadcast carries a full snapshot + monotonically increasing `Seq`; hub drops the *oldest* queued update on a full buffer so terminal states are never lost. Subscription resolver emits the current snapshot first.
 - **Map snapshot**: sessions embed their own copy of the map; map edits/deletes must never touch existing sessions.
 - **Security**: map ids match `^[a-z0-9_-]{1,64}$` (they are filenames); session ids are validated before touching disk; admin mutations need `X-Admin-Key` == `ADMIN_API_KEY` (constant-time) unless `ALLOW_UNAUTHENTICATED_ADMIN=true`; `max_steps ≤ 10000`, `max_call_depth ≤ 64` bound `simulate`. Never add solutions to the GraphQL schema.
-- **Recursion rule** is intentionally stricter than drbrain2 (see `docs/DEVELOPMENT.md` "Engine semantics").
+- **Recursion rule**: calling a sub already on the call stack is a no-op when recursion is off (see `docs/DEVELOPMENT.md` "Engine semantics").
 - A zero-sub map (`sub_tape_lengths: []`) is valid and must survive JSON round trips (no `omitempty` on that field).
 
 ## Workflows

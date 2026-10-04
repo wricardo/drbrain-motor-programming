@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Overview
-drbrain-motor-programming (product name: **Dr Brain - Motor Programming**; each Dr Brain game is its own repo): robot-programming puzzle server (Go 1.25) + SvelteKit (Svelte 5) UI. A player programs a robot on a grid (main tape + 0–3 sub tapes) to collect treats. Exposes GraphQL (queries, mutations, subscriptions over graphql-ws), `/llms.txt` (agent-facing rules, rendered from `llms.txt.tmpl`), and serves the built SPA. Architecture mirrors `../tesla-road-trip-game`, rules come from `../drbrain2` (read-only references; never modify). Root `CLAUDE.md` holds the invariants; `docs/DEVELOPMENT.md` documents rules, map format and semantics (`README.md` is player-facing); brand constants live in `frontend/src/lib/brand.ts`.
+drbrain-motor-programming (product name: **Dr Brain - Motor Programming**; each Dr Brain game is its own repo): robot-programming puzzle server (Go 1.25) + SvelteKit (Svelte 5) UI. A player programs a robot on a grid (main tape + 0–3 sub tapes) to collect treats. Exposes GraphQL (queries, mutations, subscriptions over graphql-ws), `/llms.txt` (agent-facing rules, rendered from `llms.txt.tmpl`), and serves the built SPA. Root `CLAUDE.md` holds the invariants; `docs/DEVELOPMENT.md` documents rules, map format and semantics (`README.md` is player-facing); brand constants live in `frontend/src/lib/brand.ts`.
 
 ## Architecture & Data Flow
 ```
