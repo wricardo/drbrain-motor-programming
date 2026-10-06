@@ -21,7 +21,7 @@ These decisions shape everything else. Keep them when changing the game or start
 
 1. **One API for humans and AI.** The browser UI uses the same public GraphQL API an AI agent uses. There are no private endpoints for the UI. If a person can do something, an agent can too.
 2. **The server is the source of truth.** Programs run on the server, one step per tick. Clients only display snapshots. Two browsers, or a browser and an agent, can play or watch the same session and always agree.
-3. **Pure rules engine.** All game rules live in one package with no I/O, no clock and no dependencies. It can be tested exhaustively and reused by the validator, the `simulate` query and the live runner.
+3. **Pure rules engine.** All game rules live in one package with no I/O, no clock and no dependencies. It can be tested exhaustively and reused by the validator and the live runner.
 4. **Full snapshots, ordered by sequence number.** Every update carries the whole session state and a `seq` that only goes up. Clients never patch state; they replace it and drop anything older. Dropped or reordered messages can't corrupt the view.
 5. **Files, not a database.** Maps are JSON files in `maps/`; each session is one JSON file in `sessions/`. Writes are atomic (temp file + fsync + rename). One binary plus two folders is the whole deployment.
 6. **Agent-readable by design.** `/llms.txt` explains the rules and every API call for an AI. Each game page can copy a ready-made prompt. Answers are never exposed: reference solutions are not in the API, the prompts or the public repo.
@@ -117,8 +117,8 @@ HTTP /graphql (api) → gqlgen resolver (graph) → GameService (game/service)
 
 - Map ids match `^[a-z0-9_-]{1,64}$` because they are file names. Session ids are 16 lowercase hex characters and are validated before touching disk.
 - Admin mutations (`createMap`, `updateMap`, `deleteMap`, `validateMap`) require `X-Admin-Key` equal to `ADMIN_API_KEY`, compared through SHA-256 digests in constant time. `ALLOW_UNAUTHENTICATED_ADMIN=true` is honoured only when no key is set (local development).
-- `max_steps ≤ 10000` and `max_call_depth ≤ 64` bound the cost of `simulate`.
-- Request body capped at 1 MiB; query complexity capped at 1000 with weighted costs (`sessions` by `limit`, extra cost for `simulate` and `includeEvents`). `api/hardening_test.go` keeps a copy of the frontend queries to make sure they stay under the cap.
+- `max_steps ≤ 10000` and `max_call_depth ≤ 64` bound the cost of a run.
+- Request body capped at 1 MiB; query complexity capped at 1000 with weighted costs (`sessions` by `limit`). `api/hardening_test.go` keeps a copy of the frontend queries to make sure they stay under the cap.
 - WebSocket: 10 s init timeout, frame-size guard (`api/wslimit.go`), origin check against `ALLOWED_ORIGINS`, which also drives CORS on `/graphql`.
 - Map creation is atomic (`MapStore.Create`; a conflict is `INVALID_ARGUMENT`). Never check-then-save.
 
@@ -186,7 +186,7 @@ Maps can also be created in `/editor` or with the admin mutations; both need the
 
 The schema lives in `graph/schema.graphqls`.
 
-- **Queries:** `maps`, `map(id)`, `session(id)`, `sessions(sort, limit, mapId)`, `simulate(mapID, program, includeEvents)`. `simulate` runs a program without a session, so agents can test before committing.
+- **Queries:** `maps`, `map(id)`, `session(id)`, `sessions(sort, limit, mapId)`.
 - **Mutations:** `createSession`, `renameSession`, `deleteSession`, `setProgram`, `run`, `step`, `pause`, `reset`, plus the admin map mutations.
 - **Subscription:** `sessionUpdated(sessionID)` emits the current snapshot, then every change.
 
@@ -331,7 +331,7 @@ scripts/smoke.sh 9191                            # end-to-end HTTP smoke (starts
 
 ### Before you push
 
-`make verify && make validate`, then `go run . -port 9191` and `scripts/smoke.sh 9191`. For UI changes, open `/play/<id>` and `/watch/<id>` in a browser and run a program to the end. Pushing to `main` deploys.
+`make verify && make validate`, then `scripts/smoke.sh 9191` (it builds and starts its own server, so leave the port free). For UI changes, open `/play/<id>` and `/watch/<id>` in a browser and run a program to the end. Pushing to `main` deploys.
 
 ### Public repo rules
 
@@ -343,7 +343,7 @@ scripts/smoke.sh 9191                            # end-to-end HTTP smoke (starts
 
 A checklist for the next game in the collection, based on what worked here:
 
-1. **Write the rules as a pure engine first.** State in, step, state out. No I/O, no time. Add `Simulate` (run to the end) early; the validator, the `simulate` query and the tests all use it.
+1. **Write the rules as a pure engine first.** State in, step, state out. No I/O, no time. Add `Run`/`Simulate` (run to the end) early; the validator and the tests use them.
 2. **Pin the rules with golden tests** before building anything else: known programs and their exact step counts and outcomes.
 3. **Define the data as files with a JSON Schema** (maps, puzzles, levels). Validate on load and in CI. Keep reference solutions private and check them with a CLI.
 4. **Put one service facade in front of the engine.** It owns sessions, locking and the runner. Storage and broadcasting are interfaces it defines.

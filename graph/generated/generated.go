@@ -113,7 +113,6 @@ type ComplexityRoot struct {
 		Maps     func(childComplexity int) int
 		Session  func(childComplexity int, id string) int
 		Sessions func(childComplexity int, sort *model.SessionSort, limit *int, mapID *string) int
-		Simulate func(childComplexity int, mapID string, program model.ProgramInput, includeEvents *bool) int
 	}
 
 	Session struct {
@@ -137,14 +136,6 @@ type ComplexityRoot struct {
 		Event   func(childComplexity int) int
 		Seq     func(childComplexity int) int
 		Session func(childComplexity int) int
-	}
-
-	SimulationResult struct {
-		Events     func(childComplexity int) int
-		FinalState func(childComplexity int) int
-		LossReason func(childComplexity int) int
-		Status     func(childComplexity int) int
-		Steps      func(childComplexity int) int
 	}
 
 	StepEvent struct {
@@ -198,7 +189,6 @@ type QueryResolver interface {
 	Map(ctx context.Context, id string) (*model.Map, error)
 	Session(ctx context.Context, id string) (*model.Session, error)
 	Sessions(ctx context.Context, sort *model.SessionSort, limit *int, mapID *string) ([]*model.Session, error)
-	Simulate(ctx context.Context, mapID string, program model.ProgramInput, includeEvents *bool) (*model.SimulationResult, error)
 }
 type SubscriptionResolver interface {
 	SessionUpdated(ctx context.Context, sessionID string) (<-chan *model.SessionUpdate, error)
@@ -592,18 +582,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.Sessions(childComplexity, args["sort"].(*model.SessionSort), args["limit"].(*int), args["mapId"].(*string)), true
 
-	case "Query.simulate":
-		if e.complexity.Query.Simulate == nil {
-			break
-		}
-
-		args, err := ec.field_Query_simulate_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Simulate(childComplexity, args["mapID"].(string), args["program"].(model.ProgramInput), args["includeEvents"].(*bool)), true
-
 	case "Session.attempts":
 		if e.complexity.Session.Attempts == nil {
 			break
@@ -722,41 +700,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.SessionUpdate.Session(childComplexity), true
-
-	case "SimulationResult.events":
-		if e.complexity.SimulationResult.Events == nil {
-			break
-		}
-
-		return e.complexity.SimulationResult.Events(childComplexity), true
-
-	case "SimulationResult.finalState":
-		if e.complexity.SimulationResult.FinalState == nil {
-			break
-		}
-
-		return e.complexity.SimulationResult.FinalState(childComplexity), true
-
-	case "SimulationResult.lossReason":
-		if e.complexity.SimulationResult.LossReason == nil {
-			break
-		}
-
-		return e.complexity.SimulationResult.LossReason(childComplexity), true
-
-	case "SimulationResult.status":
-		if e.complexity.SimulationResult.Status == nil {
-			break
-		}
-
-		return e.complexity.SimulationResult.Status(childComplexity), true
-
-	case "SimulationResult.steps":
-		if e.complexity.SimulationResult.Steps == nil {
-			break
-		}
-
-		return e.complexity.SimulationResult.Steps(childComplexity), true
 
 	case "StepEvent.blocked":
 		if e.complexity.StepEvent.Blocked == nil {
@@ -1172,14 +1115,6 @@ type SessionUpdate {
   event: StepEvent
 }
 
-type SimulationResult {
-  status: Status!
-  lossReason: LossReason
-  steps: Int!
-  finalState: VMState!
-  events: [StepEvent!]
-}
-
 type MapValidationIssue {
   message: String!
 }
@@ -1209,7 +1144,6 @@ type Query {
   map(id: ID!): Map
   session(id: ID!): Session
   sessions(sort: SessionSort = RECENT, limit: Int = 50, mapId: ID): [Session!]!
-  simulate(mapID: ID!, program: ProgramInput!, includeEvents: Boolean = false): SimulationResult!
 }
 
 type Mutation {
@@ -1824,80 +1758,6 @@ func (ec *executionContext) field_Query_sessions_argsMapID(
 	}
 
 	var zeroVal *string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_simulate_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Query_simulate_argsMapID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["mapID"] = arg0
-	arg1, err := ec.field_Query_simulate_argsProgram(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["program"] = arg1
-	arg2, err := ec.field_Query_simulate_argsIncludeEvents(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["includeEvents"] = arg2
-	return args, nil
-}
-func (ec *executionContext) field_Query_simulate_argsMapID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["mapID"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("mapID"))
-	if tmp, ok := rawArgs["mapID"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_simulate_argsProgram(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (model.ProgramInput, error) {
-	if _, ok := rawArgs["program"]; !ok {
-		var zeroVal model.ProgramInput
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("program"))
-	if tmp, ok := rawArgs["program"]; ok {
-		return ec.unmarshalNProgramInput2githubᚗcomᚋwricardoᚋdrbrainᚑmotorᚑprogrammingᚋgraphᚋmodelᚐProgramInput(ctx, tmp)
-	}
-
-	var zeroVal model.ProgramInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_simulate_argsIncludeEvents(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*bool, error) {
-	if _, ok := rawArgs["includeEvents"]; !ok {
-		var zeroVal *bool
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("includeEvents"))
-	if tmp, ok := rawArgs["includeEvents"]; ok {
-		return ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
-	}
-
-	var zeroVal *bool
 	return zeroVal, nil
 }
 
@@ -4498,73 +4358,6 @@ func (ec *executionContext) fieldContext_Query_sessions(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_simulate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_simulate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Simulate(rctx, fc.Args["mapID"].(string), fc.Args["program"].(model.ProgramInput), fc.Args["includeEvents"].(*bool))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.SimulationResult)
-	fc.Result = res
-	return ec.marshalNSimulationResult2ᚖgithubᚗcomᚋwricardoᚋdrbrainᚑmotorᚑprogrammingᚋgraphᚋmodelᚐSimulationResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_simulate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "status":
-				return ec.fieldContext_SimulationResult_status(ctx, field)
-			case "lossReason":
-				return ec.fieldContext_SimulationResult_lossReason(ctx, field)
-			case "steps":
-				return ec.fieldContext_SimulationResult_steps(ctx, field)
-			case "finalState":
-				return ec.fieldContext_SimulationResult_finalState(ctx, field)
-			case "events":
-				return ec.fieldContext_SimulationResult_events(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SimulationResult", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_simulate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query___type(ctx, field)
 	if err != nil {
@@ -5541,266 +5334,6 @@ func (ec *executionContext) _SessionUpdate_event(ctx context.Context, field grap
 func (ec *executionContext) fieldContext_SessionUpdate_event(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SessionUpdate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "step":
-				return ec.fieldContext_StepEvent_step(ctx, field)
-			case "instruction":
-				return ec.fieldContext_StepEvent_instruction(ctx, field)
-			case "tapeIndex":
-				return ec.fieldContext_StepEvent_tapeIndex(ctx, field)
-			case "slotIndex":
-				return ec.fieldContext_StepEvent_slotIndex(ctx, field)
-			case "from":
-				return ec.fieldContext_StepEvent_from(ctx, field)
-			case "to":
-				return ec.fieldContext_StepEvent_to(ctx, field)
-			case "facingBefore":
-				return ec.fieldContext_StepEvent_facingBefore(ctx, field)
-			case "facingAfter":
-				return ec.fieldContext_StepEvent_facingAfter(ctx, field)
-			case "blocked":
-				return ec.fieldContext_StepEvent_blocked(ctx, field)
-			case "collected":
-				return ec.fieldContext_StepEvent_collected(ctx, field)
-			case "callStack":
-				return ec.fieldContext_StepEvent_callStack(ctx, field)
-			case "status":
-				return ec.fieldContext_StepEvent_status(ctx, field)
-			case "lossReason":
-				return ec.fieldContext_StepEvent_lossReason(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type StepEvent", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SimulationResult_status(ctx context.Context, field graphql.CollectedField, obj *model.SimulationResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SimulationResult_status(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.Status)
-	fc.Result = res
-	return ec.marshalNStatus2githubᚗcomᚋwricardoᚋdrbrainᚑmotorᚑprogrammingᚋgraphᚋmodelᚐStatus(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SimulationResult_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SimulationResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Status does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SimulationResult_lossReason(ctx context.Context, field graphql.CollectedField, obj *model.SimulationResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SimulationResult_lossReason(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LossReason, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.LossReason)
-	fc.Result = res
-	return ec.marshalOLossReason2ᚖgithubᚗcomᚋwricardoᚋdrbrainᚑmotorᚑprogrammingᚋgraphᚋmodelᚐLossReason(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SimulationResult_lossReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SimulationResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type LossReason does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SimulationResult_steps(ctx context.Context, field graphql.CollectedField, obj *model.SimulationResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SimulationResult_steps(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Steps, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SimulationResult_steps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SimulationResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SimulationResult_finalState(ctx context.Context, field graphql.CollectedField, obj *model.SimulationResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SimulationResult_finalState(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.FinalState, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.VMState)
-	fc.Result = res
-	return ec.marshalNVMState2ᚖgithubᚗcomᚋwricardoᚋdrbrainᚑmotorᚑprogrammingᚋgraphᚋmodelᚐVMState(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SimulationResult_finalState(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SimulationResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "pos":
-				return ec.fieldContext_VMState_pos(ctx, field)
-			case "facing":
-				return ec.fieldContext_VMState_facing(ctx, field)
-			case "treatsRemaining":
-				return ec.fieldContext_VMState_treatsRemaining(ctx, field)
-			case "callStack":
-				return ec.fieldContext_VMState_callStack(ctx, field)
-			case "steps":
-				return ec.fieldContext_VMState_steps(ctx, field)
-			case "status":
-				return ec.fieldContext_VMState_status(ctx, field)
-			case "lossReason":
-				return ec.fieldContext_VMState_lossReason(ctx, field)
-			case "visited":
-				return ec.fieldContext_VMState_visited(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type VMState", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SimulationResult_events(ctx context.Context, field graphql.CollectedField, obj *model.SimulationResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SimulationResult_events(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Events, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*model.StepEvent)
-	fc.Result = res
-	return ec.marshalOStepEvent2ᚕᚖgithubᚗcomᚋwricardoᚋdrbrainᚑmotorᚑprogrammingᚋgraphᚋmodelᚐStepEventᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SimulationResult_events(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SimulationResult",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -9523,28 +9056,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "simulate":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_simulate(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -9697,59 +9208,6 @@ func (ec *executionContext) _SessionUpdate(ctx context.Context, sel ast.Selectio
 			}
 		case "event":
 			out.Values[i] = ec._SessionUpdate_event(ctx, field, obj)
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var simulationResultImplementors = []string{"SimulationResult"}
-
-func (ec *executionContext) _SimulationResult(ctx context.Context, sel ast.SelectionSet, obj *model.SimulationResult) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, simulationResultImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("SimulationResult")
-		case "status":
-			out.Values[i] = ec._SimulationResult_status(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "lossReason":
-			out.Values[i] = ec._SimulationResult_lossReason(ctx, field, obj)
-		case "steps":
-			out.Values[i] = ec._SimulationResult_steps(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "finalState":
-			out.Values[i] = ec._SimulationResult_finalState(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "events":
-			out.Values[i] = ec._SimulationResult_events(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10834,20 +10292,6 @@ func (ec *executionContext) marshalNSessionUpdate2ᚖgithubᚗcomᚋwricardoᚋd
 	return ec._SessionUpdate(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSimulationResult2githubᚗcomᚋwricardoᚋdrbrainᚑmotorᚑprogrammingᚋgraphᚋmodelᚐSimulationResult(ctx context.Context, sel ast.SelectionSet, v model.SimulationResult) graphql.Marshaler {
-	return ec._SimulationResult(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNSimulationResult2ᚖgithubᚗcomᚋwricardoᚋdrbrainᚑmotorᚑprogrammingᚋgraphᚋmodelᚐSimulationResult(ctx context.Context, sel ast.SelectionSet, v *model.SimulationResult) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._SimulationResult(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalNStatus2githubᚗcomᚋwricardoᚋdrbrainᚑmotorᚑprogrammingᚋgraphᚋmodelᚐStatus(ctx context.Context, v any) (model.Status, error) {
 	var res model.Status
 	err := res.UnmarshalGQL(v)
@@ -10856,16 +10300,6 @@ func (ec *executionContext) unmarshalNStatus2githubᚗcomᚋwricardoᚋdrbrain�
 
 func (ec *executionContext) marshalNStatus2githubᚗcomᚋwricardoᚋdrbrainᚑmotorᚑprogrammingᚋgraphᚋmodelᚐStatus(ctx context.Context, sel ast.SelectionSet, v model.Status) graphql.Marshaler {
 	return v
-}
-
-func (ec *executionContext) marshalNStepEvent2ᚖgithubᚗcomᚋwricardoᚋdrbrainᚑmotorᚑprogrammingᚋgraphᚋmodelᚐStepEvent(ctx context.Context, sel ast.SelectionSet, v *model.StepEvent) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._StepEvent(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
@@ -11346,53 +10780,6 @@ func (ec *executionContext) marshalOSessionSort2ᚖgithubᚗcomᚋwricardoᚋdrb
 		return graphql.Null
 	}
 	return v
-}
-
-func (ec *executionContext) marshalOStepEvent2ᚕᚖgithubᚗcomᚋwricardoᚋdrbrainᚑmotorᚑprogrammingᚋgraphᚋmodelᚐStepEventᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.StepEvent) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNStepEvent2ᚖgithubᚗcomᚋwricardoᚋdrbrainᚑmotorᚑprogrammingᚋgraphᚋmodelᚐStepEvent(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalOStepEvent2ᚖgithubᚗcomᚋwricardoᚋdrbrainᚑmotorᚑprogrammingᚋgraphᚋmodelᚐStepEvent(ctx context.Context, sel ast.SelectionSet, v *model.StepEvent) graphql.Marshaler {

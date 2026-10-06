@@ -33,24 +33,18 @@ Limits: at most ${n.maxSteps} steps; ${s}
 
 ## How to win
 1. Plan on paper first: write the route as straight runs and turns using the coordinates above. Tapes are tiny, so look for repeated patterns and put them in subroutines (a sub can be a "row", a "U-turn", a "spiral side"...). Remember a blocked move costs a step but does no harm, so an over-long run of MOVE_FORWARD is safe when a wall will stop it.
-2. Test for free before committing. simulate runs instantly without touching the session:
-query {
-  simulate(mapID: "${n.id}", includeEvents: false, program: {
-    ${a}
-  }) { status lossReason steps finalState { pos { x y } treatsRemaining { x y } } }
-}
-   (Replace the EMPTY slots with real instructions.) With includeEvents: true you also get a step-by-step trace to debug.
-3. When simulate says WON, store the program in the session:
+2. Store the program in the session:
 mutation {
   setProgram(sessionID: "${t.id}", program: {
     ${a}
   }) { id vm { status steps } }
 }
-4. Run it on the server (50-5000 ms per step) or step manually, then read the result:
+   (Replace the EMPTY slots with real instructions.)
+3. Run it on the server (50-5000 ms per step) or step manually, then read the result:
 mutation { run(sessionID: "${t.id}", speedMs: 100) { playing vm { status steps } } }
 mutation { step(sessionID: "${t.id}") { vm { status steps pos { x y } } lastEvent { instruction blocked } } }
 query { session(id: "${t.id}") { playing attempts bestSteps vm { status lossReason steps pos { x y } facing treatsRemaining { x y } callStack { tape pc } } } }
-5. If the status is LOST, read lossReason and treatsRemaining, fix the program, and repeat from step 2 (call reset first if you want to run again without changing the program). Do not stop until vm.status is WON, then report the winning program and its step count.
+4. If the status is LOST, read lossReason and treatsRemaining, fix the program, and repeat from step 2 (call reset first if you want to run again without changing the program). Do not stop until vm.status is WON, then report the winning program and its step count.
 
 Other mutations: pause, reset, renameSession, deleteSession. Do not try to guess other sessions' ids and do not delete this one.`}function L(e){return`Play ${b}, a robot programming puzzle, through its GraphQL API and win it.
 
@@ -60,5 +54,5 @@ You write the robot a program (a main tape plus up to 3 subroutine tapes); the s
 2. GraphQL endpoint: ${e}/graphql (Playground: ${e}/playground).
 3. List the maps: query { maps { id name difficulty layout mainTapeLength subTapeLengths maxSteps maxCallDepth allowRecursion } } and pick one (start with an easy one).
 4. Create your own session: mutation { createSession(mapID: "MAP_ID", displayName: "my agent") { id } }
-5. Plan the route from the layout, test programs for free with the simulate query, then setProgram, run, and read the session until vm.status is WON. If it is LOST, read lossReason, fix the program and try again.
+5. Plan the route from the layout, then setProgram, run, and read the session until vm.status is WON. If it is LOST, read lossReason, fix the program and try again.
 6. Tell me the session id so I can watch it live at ${e}/watch/SESSION_ID, and report the winning program and its step count.`}export{k as a,T as i,I as n,j as o,A as r,C as s,L as t};

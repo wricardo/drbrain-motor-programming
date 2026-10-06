@@ -53,7 +53,6 @@ describe('buildSessionPrompt', () => {
 		expect(p).toContain('main: [EMPTY, EMPTY, EMPTY]');
 		expect(p).toContain('subs: [[EMPTY, EMPTY], [EMPTY, EMPTY, EMPTY, EMPTY]]');
 		expect(p).toContain('setProgram(sessionID: "abc123"');
-		expect(p).toContain('simulate(mapID: "tiny"');
 	});
 
 	it('only offers calls to subs the map has', () => {

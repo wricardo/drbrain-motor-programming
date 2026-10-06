@@ -206,19 +206,3 @@ func toSession(s *service.Session) *model.Session {
 func toSessionUpdate(s *service.Session) *model.SessionUpdate {
 	return &model.SessionUpdate{Seq: int(s.Seq), Session: toSession(s), Event: toStepEvent(s.LastEvent)}
 }
-
-func toSimulationResult(r *service.SimulationResult) *model.SimulationResult {
-	out := &model.SimulationResult{
-		Status:     model.Status(r.Status),
-		LossReason: toLossReason(r.LossReason),
-		Steps:      r.Steps,
-		FinalState: toVMState(&r.FinalState, r.Map),
-	}
-	if r.Events != nil {
-		out.Events = make([]*model.StepEvent, len(r.Events))
-		for i := range r.Events {
-			out.Events[i] = toStepEvent(&r.Events[i])
-		}
-	}
-	return out
-}

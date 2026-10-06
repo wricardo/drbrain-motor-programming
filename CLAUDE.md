@@ -21,7 +21,7 @@ make build-frontend                        # build UI into static/ (committed)
 cd frontend && npm run check && npm test
 cd frontend && npx vitest run src/lib/grid.test.ts   # single frontend test
 cd frontend && npm run dev:local           # Vite UI against a local server on :8000
-scripts/smoke.sh 9191                      # end-to-end HTTP smoke
+scripts/smoke.sh 9191                      # end-to-end HTTP smoke (starts its own server)
 ```
 
 ## Invariants — do not break
@@ -55,4 +55,4 @@ scripts/smoke.sh 9191                      # end-to-end HTTP smoke
 
 Go: table tests + `t.Run`, no `t.Parallel()` (uses `t.Setenv`), always `-race`; service tests use `newEnv` (`game/service/helpers_test.go`) and `waitFor`, never fixed sleeps. Frontend: Vitest + jsdom + Testing Library; logic lives in tested `lib/*.ts` modules.
 
-**Before pushing**: `make verify && make validate`, `go run . -port 9191` + `scripts/smoke.sh 9191`; for UI changes open `/play/<id>` and `/watch/<id>` and run a program to the end.
+**Before pushing**: `make verify && make validate`, `scripts/smoke.sh 9191` (starts its own server; port must be free); for UI changes open `/play/<id>` and `/watch/<id>` and run a program to the end.

@@ -55,16 +55,6 @@ func (s *Session) Clone() *Session {
 	return c
 }
 
-// SimulationResult is the outcome of an instant simulation.
-type SimulationResult struct {
-	Status     engine.Status
-	LossReason engine.LossReason
-	Steps      int
-	FinalState engine.VMState
-	Map        *engine.Map
-	Events     []engine.StepEvent // only when requested
-}
-
 // SessionFilter narrows ListSessions.
 type SessionFilter struct {
 	MapID string
@@ -91,8 +81,6 @@ type GameService interface {
 	Step(id string) (*Session, error)
 	// Reset puts the VM back to start, keeping the program; stops playback.
 	Reset(id string) (*Session, error)
-	// Simulate runs instantly without a session.
-	Simulate(mapID string, p engine.Program, includeEvents bool) (*SimulationResult, error)
 
 	ListMaps() []*engine.Map
 	GetMap(id string) (*engine.Map, error)

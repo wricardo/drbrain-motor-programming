@@ -81,18 +81,7 @@ query { maps { id name difficulty width height layout mainTapeLength subTapeLeng
 mutation { createSession(mapID: "straight_line", displayName: "my bot") { id map { mainTapeLength subTapeLengths } } }
 ```
 
-3. Dry run without a session (instant, optional `includeEvents` for the full trace):
-
-```graphql
-query {
-  simulate(mapID: "straight_line", includeEvents: false, program: {
-    main: [MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, MOVE_FORWARD, EMPTY]
-    subs: [[EMPTY, EMPTY, EMPTY, EMPTY]]
-  }) { status lossReason steps finalState { pos { x y } treatsRemaining { x y } } }
-}
-```
-
-4. Store the program in your session (resets the robot):
+3. Store the program in your session (resets the robot):
 
 ```graphql
 mutation {
@@ -103,7 +92,7 @@ mutation {
 }
 ```
 
-5. Run it on the server (50–5000 ms per step) or step manually:
+4. Run it on the server (50–5000 ms per step) or step manually:
 
 ```graphql
 mutation { run(sessionID: "SESSION_ID", speedMs: 100) { playing vm { status steps } } }
@@ -113,7 +102,7 @@ mutation { run(sessionID: "SESSION_ID", speedMs: 100) { playing vm { status step
 mutation { step(sessionID: "SESSION_ID") { vm { status steps pos { x y } } lastEvent { instruction blocked } } }
 ```
 
-6. Poll or subscribe for the result:
+5. Poll or subscribe for the result:
 
 ```graphql
 query { session(id: "SESSION_ID") { playing seq bestSteps attempts vm { status lossReason steps treatsRemaining { x y } callStack { tape pc } } } }
@@ -133,7 +122,6 @@ Other session mutations: `pause`, `reset`, `renameSession(id, displayName)`,
 
 ## Tips
 
-- Simulate before you commit: `simulate` costs nothing and returns the trace.
 - Subroutines are reusable loops: put `CALL_SUB_1` as the last slot of `subs[0]` on a map with
   `allowRecursion: true` to repeat it until a limit or the win.
 - `bestSteps` is the fewest steps among winning runs of this session.

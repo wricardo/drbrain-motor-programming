@@ -31,7 +31,6 @@
 	const aiSteps: [string, string][] = [
 		['Read the map', 'Ask for the layout, the start cell and facing, the treats, the tape lengths and the limits (steps, call depth, recursion).'],
 		['Plan on paper', 'Turn the route into straight runs and turns using coordinates (y grows downward), then look for runs and turn sequences that repeat.'],
-		['Test for free', 'The simulate query runs a program instantly without touching a session and can return a step-by-step trace to debug.'],
 		['Save and run', 'setProgram stores the program in the session (it resets the robot), then run plays it on the server or step advances one instruction.'],
 		['Read the result', 'Check the status and lossReason. If it lost, see which treats remain, fix the program and try again. The attempts counter and the best step count are kept on the session.']
 	];

@@ -69,7 +69,6 @@ Then read the session (or subscribe to it) until the status is `WON` or `LOST`. 
 Some questions worth exploring:
 
 - Can the AI find the pattern on the hard maps, or does it only manage the easy ones?
-- Does it use the `simulate` query to test a program before running it, or does it learn by losing?
 - How many tries does it need compared to you?
 
 ## About

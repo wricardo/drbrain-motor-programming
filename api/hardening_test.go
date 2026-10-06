@@ -59,7 +59,6 @@ const (
 	eventSel   = `step instruction tapeIndex slotIndex from { x y } to { x y } facingBefore facingAfter blocked collected { x y } callStack { tape pc } status lossReason`
 	sessionSel = `id displayName mapId map { ` + mapSel + ` } program { main subs } vm { pos { x y } facing treatsRemaining { x y } callStack { tape pc } steps status lossReason visited { x y } } playing speedMs seq createdAt lastActionAt attempts lastEvent { ` + eventSel + ` }`
 	sessionsQ  = `query Sessions($limit: Int, $sort: SessionSort, $mapId: ID) { sessions(sort: $sort, limit: $limit, mapId: $mapId) { id displayName mapId playing createdAt lastActionAt map { name } vm { status steps treatsRemaining { x y } } } }`
-	simulateQ  = `query Simulate($mapID: ID!, $program: ProgramInput!, $includeEvents: Boolean) { simulate(mapID: $mapID, program: $program, includeEvents: $includeEvents) { status lossReason steps } }`
 )
 
 func queryComplexity(t *testing.T, query string, vars map[string]any) int {
@@ -73,7 +72,6 @@ func queryComplexity(t *testing.T, query string, vars map[string]any) int {
 }
 
 func TestFrontendQueriesStayUnderComplexityLimit(t *testing.T) {
-	prog := map[string]any{"main": []any{"FORWARD"}, "subs": []any{}}
 	cases := []struct {
 		name  string
 		query string
@@ -84,7 +82,6 @@ func TestFrontendQueriesStayUnderComplexityLimit(t *testing.T) {
 		{"sessions page (limit 500)", sessionsQ, map[string]any{"limit": json.Number("500")}},
 		{"sessions home (limit 12)", sessionsQ, map[string]any{"limit": json.Number("12")}},
 		{"sessions default limit", sessionsQ, nil},
-		{"simulate", simulateQ, map[string]any{"mapID": "m", "program": prog}},
 		{"mutation with full session", `mutation($sessionID: ID!) { run(sessionID: $sessionID) { ` + sessionSel + ` } }`, map[string]any{"sessionID": "x"}},
 		{"subscription", `subscription($sessionID: ID!) { sessionUpdated(sessionID: $sessionID) { seq session { ` + sessionSel + ` } event { ` + eventSel + ` } } }`, map[string]any{"sessionID": "x"}},
 	}
@@ -97,18 +94,12 @@ func TestFrontendQueriesStayUnderComplexityLimit(t *testing.T) {
 	}
 }
 
-func TestComplexityScalesWithLimitAndEvents(t *testing.T) {
-	const prog = `{main: [], subs: []}`
+func TestComplexityScalesWithLimit(t *testing.T) {
 	sessions := func(limit string) int {
 		return queryComplexity(t, `{ sessions(limit: `+limit+`) { id map { name } vm { status } } }`, nil)
 	}
 	if small, big := sessions("10"), sessions("500"); big <= small*10 {
 		t.Fatalf("sessions cost does not grow with limit: limit 10 = %d, limit 500 = %d", small, big)
-	}
-	plain := queryComplexity(t, `{ simulate(mapID: "m", program: `+prog+`) { steps } }`, nil)
-	events := queryComplexity(t, `{ simulate(mapID: "m", program: `+prog+`, includeEvents: true) { steps } }`, nil)
-	if events < plain+simulateEventsCost {
-		t.Fatalf("includeEvents not weighted: plain %d, events %d", plain, events)
 	}
 }
 
@@ -125,8 +116,6 @@ func TestAliasedAbuseIsRejected(t *testing.T) {
 	}
 	cases := map[string]string{
 		"sessions at max limit": alias(3, `sessions(limit: 500) { id map { name } vm { status steps treatsRemaining { x y } } }`),
-		"simulate with events":  alias(5, `simulate(mapID: "m1", program: {main: [], subs: []}, includeEvents: true) { steps }`),
-		"simulate plain":        alias(150, `simulate(mapID: "m1", program: {main: [], subs: []}) { steps }`),
 	}
 	for name, q := range cases {
 		t.Run(name, func(t *testing.T) {

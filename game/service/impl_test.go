@@ -572,45 +572,6 @@ func TestShutdownStopsRunnersAndPersists(t *testing.T) {
 	e.svc.Shutdown() // idempotent
 }
 
-func TestSimulate(t *testing.T) {
-	e := newEnv(t, envOpts{})
-
-	res, err := e.svc.Simulate("corridor", corridorFast(), true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res.Status != engine.StatusWon || res.Steps != 4 || len(res.Events) != 4 || res.Map == nil || res.FinalState.Steps != 4 {
-		t.Fatalf("simulate: %s steps %d events %d", res.Status, res.Steps, len(res.Events))
-	}
-	res, err = e.svc.Simulate("corridor", corridorFast(), false)
-	if err != nil || res.Status != engine.StatusWon || res.Steps != 4 || res.Events != nil {
-		t.Fatalf("no-events simulate: %v %+v", err, res)
-	}
-
-	// Events are bounded by the map's max_steps.
-	res, err = e.svc.Simulate("spin", spinProgram(), true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res.Status != engine.StatusLost || res.LossReason != engine.LossStepLimit || res.Steps != 100 || len(res.Events) != 100 {
-		t.Fatalf("spin: %s/%s steps %d events %d", res.Status, res.LossReason, res.Steps, len(res.Events))
-	}
-
-	corridor, _ := e.maps.Get("corridor")
-	res, err = e.svc.Simulate("corridor", engine.EmptyProgram(corridor), false)
-	if err != nil || res.Status != engine.StatusLost || res.LossReason != engine.LossProgramEnded || res.Steps != 0 {
-		t.Fatalf("empty program: %v %+v", err, res)
-	}
-
-	_, err = e.svc.Simulate("corridor", engine.Program{Main: pad(2)}, false)
-	wantCode(t, err, service.CodeInvalidProgram)
-	_, err = e.svc.Simulate("nope", corridorFast(), false)
-	wantCode(t, err, service.CodeNotFound)
-	if e.mgr.Count() != 0 {
-		t.Fatal("Simulate created a session")
-	}
-}
-
 func TestZeroSubMapSession(t *testing.T) {
 	e := newEnv(t, envOpts{})
 	s := e.create(t, "nosubs")

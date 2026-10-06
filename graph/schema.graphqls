@@ -129,14 +129,6 @@ type SessionUpdate {
   event: StepEvent
 }
 
-type SimulationResult {
-  status: Status!
-  lossReason: LossReason
-  steps: Int!
-  finalState: VMState!
-  events: [StepEvent!]
-}
-
 type MapValidationIssue {
   message: String!
 }
@@ -166,7 +158,6 @@ type Query {
   map(id: ID!): Map
   session(id: ID!): Session
   sessions(sort: SessionSort = RECENT, limit: Int = 50, mapId: ID): [Session!]!
-  simulate(mapID: ID!, program: ProgramInput!, includeEvents: Boolean = false): SimulationResult!
 }
 
 type Mutation {

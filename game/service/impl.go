@@ -459,29 +459,6 @@ func (svc *gameService) Reset(id string) (*Session, error) {
 	return snap, nil
 }
 
-// Simulate runs p on map mapID instantly, without a session. Execution is
-// bounded by the map's max_steps.
-func (svc *gameService) Simulate(mapID string, p engine.Program, includeEvents bool) (*SimulationResult, error) {
-	m, err := svc.maps.Get(mapID)
-	if err != nil {
-		return nil, err
-	}
-	if err := engine.ValidateProgram(m, p); err != nil {
-		return nil, Errorf(CodeInvalidProgram, "%v", err)
-	}
-	res := &SimulationResult{Map: m}
-	if includeEvents {
-		vm := engine.NewVMState(m)
-		res.Events, res.FinalState = engine.Simulate(m, p, vm, m.MaxSteps)
-	} else {
-		res.FinalState = engine.Run(m, p)
-	}
-	res.Status = res.FinalState.Status
-	res.LossReason = res.FinalState.LossReason
-	res.Steps = res.FinalState.Steps
-	return res, nil
-}
-
 // ---- maps ------------------------------------------------------------------
 
 // ListMaps lists all maps.

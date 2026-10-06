@@ -106,14 +106,6 @@ type SessionUpdate struct {
 	Event   *StepEvent `json:"event,omitempty"`
 }
 
-type SimulationResult struct {
-	Status     Status       `json:"status"`
-	LossReason *LossReason  `json:"lossReason,omitempty"`
-	Steps      int          `json:"steps"`
-	FinalState *VMState     `json:"finalState"`
-	Events     []*StepEvent `json:"events,omitempty"`
-}
-
 type StepEvent struct {
 	Step         int         `json:"step"`
 	Instruction  Instruction `json:"instruction"`

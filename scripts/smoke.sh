@@ -32,10 +32,6 @@ echo "session: ${SID}"
 gql "mutation { setProgram(sessionID:\"${SID}\", program:{main:[MOVE_FORWARD,MOVE_FORWARD,MOVE_FORWARD,MOVE_FORWARD,MOVE_FORWARD,MOVE_FORWARD,MOVE_FORWARD,EMPTY], subs:[[EMPTY,EMPTY,EMPTY,EMPTY]]}) { id } }" \
   | jq -e '.errors == null' >/dev/null || fail "setProgram"
 
-SIM=$(gql "query { simulate(mapID:\"straight_line\", program:{main:[MOVE_FORWARD,MOVE_FORWARD,MOVE_FORWARD,MOVE_FORWARD,MOVE_FORWARD,MOVE_FORWARD,MOVE_FORWARD,EMPTY], subs:[[EMPTY,EMPTY,EMPTY,EMPTY]]}) { status steps } }")
-echo "simulate: ${SIM}"
-echo "${SIM}" | jq -e '.data.simulate.status == "WON"' >/dev/null || fail "simulate not WON"
-
 gql "mutation { run(sessionID:\"${SID}\", speedMs:50) { playing } }" | jq -e '.errors == null' >/dev/null || fail "run"
 STATUS=""
 for _ in $(seq 1 100); do

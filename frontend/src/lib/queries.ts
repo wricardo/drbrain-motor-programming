@@ -97,16 +97,6 @@ export const SESSIONS_QUERY = `
   }
 `;
 
-export const SIMULATE_QUERY = `
-  query Simulate($mapID: ID!, $program: ProgramInput!, $includeEvents: Boolean) {
-    simulate(mapID: $mapID, program: $program, includeEvents: $includeEvents) {
-      status
-      lossReason
-      steps
-    }
-  }
-`;
-
 export const CREATE_SESSION_MUTATION = `
   mutation CreateSession($mapID: ID!, $displayName: String) {
     createSession(mapID: $mapID, displayName: $displayName) { ${SESSION_FIELDS} }

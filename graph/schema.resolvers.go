@@ -199,16 +199,6 @@ func (r *queryResolver) Sessions(ctx context.Context, sort *model.SessionSort, l
 	return out, nil
 }
 
-// Simulate is the resolver for the simulate field.
-func (r *queryResolver) Simulate(ctx context.Context, mapID string, program model.ProgramInput, includeEvents *bool) (*model.SimulationResult, error) {
-	events := includeEvents != nil && *includeEvents
-	res, err := r.Service.Simulate(mapID, fromProgramInput(program), events)
-	if err != nil {
-		return nil, toGQLError(err)
-	}
-	return toSimulationResult(res), nil
-}
-
 // SessionUpdated is the resolver for the sessionUpdated field. It subscribes
 // before reading the snapshot so no update is lost between the two, emits the
 // snapshot immediately, then forwards hub updates.

@@ -41,10 +41,6 @@ const (
 	// sessionsPerCostUnit: a sessions list of N rows costs ceil(N/10) times
 	// its per-row selection cost (the page asks for 500 rows of ~14 each).
 	sessionsPerCostUnit = 10
-	// simulateCost is the flat cost of one simulate call (up to 10000 steps);
-	// simulateEventsCost is added when includeEvents asks for every step.
-	simulateCost       = 10
-	simulateEventsCost = 250
 )
 
 // Options configures the server.
@@ -144,15 +140,6 @@ func complexityRoot() generated.ComplexityRoot {
 		}
 		units := (n + sessionsPerCostUnit - 1) / sessionsPerCostUnit
 		return safeMul(child, units) + 1
-	}
-	// simulate runs up to max_steps (10000) engine steps; recording every
-	// event also allocates one event per step.
-	c.Query.Simulate = func(child int, _ string, _ model.ProgramInput, includeEvents *bool) int {
-		cost := child + simulateCost
-		if includeEvents != nil && *includeEvents {
-			cost += simulateEventsCost
-		}
-		return cost
 	}
 	return c
 }
