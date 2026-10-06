@@ -203,7 +203,7 @@
 					<div class="rounded-xl border border-indigo-200 bg-white p-3 space-y-3">
 						<Palette bind:selected subCount={draft.subs.length} disabled={playing} />
 						<p class="text-xs text-slate-600">
-							Click an instruction, then a slot — or drag between them (hold Alt to copy). With a slot focused: <kbd>F</kbd> forward, <kbd>L</kbd>/<kbd>R</kbd> turn,
+							Click a slot to pick its instruction, or arm one here and click slots to stamp it. Drag to move (hold Alt to copy). With a slot focused: <kbd>F</kbd> forward, <kbd>L</kbd>/<kbd>R</kbd> turn,
 							{callKeys}
 							<kbd>Backspace</kbd> clear, arrows move.
 						</p>

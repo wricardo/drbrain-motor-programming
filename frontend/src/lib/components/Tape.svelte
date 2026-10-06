@@ -2,8 +2,9 @@
 	import { DRAG_MIME, decodeDrag, encodeDrag } from '$lib/dnd';
 	import { computeSlotMarks, marksFor, type SlotMarks } from '$lib/highlight';
 	import { instructionMeta, tapeLabel } from '$lib/instructions';
-	import { applyDrop, setSlot, tapeLengths } from '$lib/program';
+	import { applyDrop, setSlot, tapeLengths, tapeOf } from '$lib/program';
 	import { keyToAction, moveSelection } from '$lib/shortcuts';
+	import SlotPicker from './SlotPicker.svelte';
 	import type { Frame, Instruction, Program, Status, StepEvent } from '$lib/types';
 
 	let {
@@ -28,6 +29,11 @@
 
 	let root: HTMLElement | undefined = $state();
 	let dropTarget = $state<string | null>(null);
+	// Slot whose instruction menu is open (click with no palette tool armed).
+	let picker = $state<{ tape: number; slot: number; anchor: HTMLElement } | null>(null);
+	$effect(() => {
+		if (disabled) picker = null;
+	});
 
 	const tapes = $derived([
 		{ tape: -1, slots: program.main },
@@ -63,9 +69,30 @@
 		focusSlot(tape, slot + 1);
 	}
 
-	function onClick(tape: number, slot: number) {
-		if (disabled || selected === null) return;
-		onchange(setSlot(program, tape, slot, selected));
+	function onClick(e: MouseEvent, tape: number, slot: number) {
+		if (disabled) return;
+		if (selected !== null) {
+			onchange(setSlot(program, tape, slot, selected));
+			return;
+		}
+		const same = picker?.tape === tape && picker.slot === slot;
+		picker = same ? null : { tape, slot, anchor: e.currentTarget as HTMLElement };
+	}
+
+	function closePicker() {
+		if (!picker) return;
+		const { tape, slot } = picker;
+		picker = null;
+		focusSlot(tape, slot);
+	}
+
+	function pick(ins: Instruction) {
+		if (!picker) return;
+		const { tape, slot } = picker;
+		picker = null;
+		onchange(setSlot(program, tape, slot, ins));
+		// Like typing a shortcut: advance so the next slot is one Enter away.
+		focusSlot(tape, ins === 'EMPTY' ? slot : Math.min(slot + 1, tapeOf(program, tape)!.length - 1));
 	}
 
 	function onDragStart(e: DragEvent, tape: number, slot: number) {
@@ -129,8 +156,10 @@
 							: ''} {disabled ? 'cursor-default' : 'cursor-pointer'}"
 						aria-label={slotLabel(t.tape, slot, ins, m)}
 						aria-disabled={disabled}
+						aria-haspopup={!disabled && selected === null ? 'menu' : undefined}
+						aria-expanded={picker?.tape === t.tape && picker.slot === slot ? true : undefined}
 						draggable={!disabled && ins !== 'EMPTY'}
-						onclick={() => onClick(t.tape, slot)}
+						onclick={(e) => onClick(e, t.tape, slot)}
 						onkeydown={(e) => onKeyDown(e, t.tape, slot)}
 						ondragstart={(e) => onDragStart(e, t.tape, slot)}
 						ondragover={(e) => onDragOver(e, t.tape, slot)}
@@ -146,3 +175,14 @@
 		</div>
 	{/each}
 </div>
+
+{#if picker}
+	<SlotPicker
+		anchor={picker.anchor}
+		title="{tapeLabel(picker.tape)} · slot {picker.slot + 1}"
+		current={tapeOf(program, picker.tape)?.[picker.slot] ?? 'EMPTY'}
+		subCount={program.subs.length}
+		onpick={pick}
+		onclose={closePicker}
+	/>
+{/if}

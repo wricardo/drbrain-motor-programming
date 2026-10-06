@@ -139,7 +139,7 @@
 
 	<section aria-labelledby="keys-h">
 		<h2 id="keys-h" class="text-xl font-semibold text-indigo-950">Keyboard &amp; drag-and-drop</h2>
-		<p class="mt-2 text-sm text-slate-800">Focus a slot (Tab, or click) to use shortcuts. Typing an instruction key fills the slot and moves to the next one.</p>
+		<p class="mt-2 text-sm text-slate-800">Click a slot (or press Enter on it) to pick an instruction from a menu. Focus a slot (Tab) to use shortcuts. Typing an instruction key fills the slot and moves to the next one.</p>
 		<dl class="mt-3 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
 			{#each keys as [k, d]}
 				<dt><kbd class="rounded border border-indigo-200 bg-white px-1.5">{k}</kbd></dt>

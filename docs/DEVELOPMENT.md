@@ -251,7 +251,7 @@ Each instruction has a fixed colour, glyph and key, defined once in `lib/instruc
 | Empty | (blank) | Backspace | white with slate border |
 
 - Tapes are rows of slots labelled **Main**, **Sub 1**, etc. Each slot shows its index in small faded text.
-- Editing: click an instruction then a slot, drag between palette and slots (hold Alt to copy), or use the keyboard (letters and numbers place, Backspace clears, arrows move between slots and tapes). Only the subs a map has are offered.
+- Editing: click a slot (or press Enter on it) to open an instruction menu next to it (`SlotPicker.svelte`, placed by `lib/popover.ts`; shortcut keys pick, Backspace erases, Esc closes, focus moves to the next slot); arm a palette instruction to stamp it on every slot clicked; drag between palette and slots (hold Alt to copy), or use the keyboard (letters and numbers place, Backspace clears, arrows move between slots and tapes). Only the subs a map has are offered.
 - While running, slots show execution state (`lib/highlight.ts`): **next to run** gets a thick indigo ring, a **waiting caller** (a CALL whose sub is running) gets a violet ring with an offset, and **just executed** gets an inner yellow ring. Each state is also described in the slot's accessible label.
 - The call stack panel shows each frame and the depth against the map's limit.
 
