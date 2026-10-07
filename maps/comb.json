@@ -1,0 +1,20 @@
+{
+  "id": "comb",
+  "name": "Patterns 4 - Comb",
+  "description": "Climb every tooth of the comb and come back down for the next one. Build the tooth once, then repeat it.",
+  "difficulty": "medium",
+  "layout": [
+    "*#*#*#*#*",
+    ".#.#.#.#.",
+    ".#.#.#.#.",
+    "^........"
+  ],
+  "main_tape_length": 5,
+  "sub_tape_lengths": [
+    3,
+    8
+  ],
+  "max_steps": 80,
+  "max_call_depth": 3,
+  "allow_recursion": false
+}

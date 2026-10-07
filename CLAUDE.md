@@ -46,7 +46,7 @@ scripts/smoke.sh 9191                      # end-to-end HTTP smoke (starts its o
 ## Change checklists
 
 - **Schema**: `graph/schema.graphqls` → `make generate` → `graph/convert.go` + resolvers → `frontend/src/lib/{queries,types}.ts` → `llms.txt.tmpl` / `lib/prompt.ts` if agents are affected → query copies in `api/hardening_test.go`.
-- **Engine**: update golden step counts in `game/engine/engine_test.go` and `validate/validate_test.go` (7, 17, 19, 46, 23, 30, 44, 80, 32, 48, 83) deliberately, never to hide a failure.
+- **Engine**: update golden step counts in `game/engine/engine_test.go` and `validate/validate_test.go` (7, 17, 19, 46, 23, 30, 44, 80, 32, 48, 83, 65, 77, 57, 40, 30, 42) deliberately, never to hide a failure.
 - **New map**: `maps/<id>.json` + local `solutions/<id>.json` → `make validate` → golden step count in `validate/validate_test.go`.
 - **New page**: route under `frontend/src/routes/` + `spaRoutes` in `api/server.go` (+ nav in `+layout.svelte`).
 - **UI**: Svelte 5 runes only; follow "UI look and feel" in `docs/DEVELOPMENT.md` (instruction colors/glyphs/keys live in `lib/instructions.ts`, brand names in `lib/brand.ts`). Gotcha: explicit `onchange`/`oninput` run before `bind:value` updates — read `event.currentTarget.value`.

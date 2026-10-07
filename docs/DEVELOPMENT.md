@@ -47,13 +47,14 @@ Routes:
 
 | Path | What it is |
 |---|---|
-| `/` | Landing page: what the game is, example map, map picker, recent sessions |
-| `/play/<session>` | Board, run controls, program editor, call stack, AI prompt card |
-| `/watch/<session>` | Read-only live view of any session, with its AI prompt card |
-| `/sessions` | All sessions: filter by name/map/status, sort, "mine only" |
-| `/maps` | All maps as cards with mini previews |
-| `/editor` | Map editor with live preview and server-side validation (saving needs the admin key) |
-| `/learn` | Rules, keyboard and drag-and-drop, how AI plays, a generic AI prompt, strategies |
+| `/` | Landing page: short hero, Continue card (this browser's last unfinished session), first 3 maps, recent started sessions |
+| `/play/<session>` | Board, status line, stats, run controls, program editor, call stack, help, AI prompt card, result modal |
+| `/watch/<session>` | Read-only live view of any session: status line, stats, Take over, tapes, AI prompt card |
+| `/sessions` | All sessions: status chips, search (name/id/map), map filter, sort, Load more, select rows to watch together; auto-refreshes every 10 s |
+| `/multi?ids=a,b` | Several sessions as compact live boards (from "Watch selected" on `/sessions`) |
+| `/maps` | All maps as cards: search and difficulty chips |
+| `/editor` | Map editor with server-side validation (saving needs the admin key) |
+| `/learn` | How it works: the game, instructions, rules, controls, how an AI plays, a generic AI prompt, tips |
 | `/graphql` | GraphQL over HTTP and WebSocket (`graphql-ws`); `/playground` when enabled |
 | `/llms.txt` | Guide for AI agents, rendered from `llms.txt.tmpl` |
 
@@ -223,10 +224,13 @@ The goal: friendly, bright and calm, like a puzzle book. Readable for kids and a
 
 ### Layout
 
-- Header: logo, **Dr Brain** with **Motor Programming** next to it (hidden on small screens), pill navigation (Play, How it works, Sessions, Maps, Editor). Footer: one-line tagline plus links to the rules, `/llms.txt` and the GraphQL endpoint, so agents and curious developers can find the API from any page.
+- Header: logo, **Dr Brain** with **Motor Programming** next to it (hidden on small screens), pill navigation (Play, Maps, Sessions, How it works, Editor; Sessions stays active on `/watch/*` and `/multi`). Footer: four columns — tagline · Play (Home, Maps, Sessions, Editor) · Docs (How it works, `/llms.txt`, GraphQL endpoint) · Tools (GraphQL Playground), so agents and curious developers can find the API from any page.
+- Map order everywhere is `sortMaps` (`lib/maps.ts`): difficulty, then name with numeric compare, so series numbers stay in order within a difficulty. Map cards show the series label ("Patterns 3") above the title, a square thumbnail, a 2-line description, tags and a full-width Play button.
+- Times in lists are relative (`lib/time.ts`: "5m ago", "Oct 4") with the absolute time in a tooltip; bounded counters read "value / limit".
 - Content is centred at `max-w-6xl` with `px-4 sm:px-6`.
-- Play page: two columns on large screens (board left, program right), one column on mobile. The board column holds the grid, stats, map description and the result banner. The program column holds run controls, the instruction palette, the tapes, the call stack and the AI prompt card.
-- Watch page: the same board and tapes, read-only, with no editing controls.
+- Play page: two columns on large screens (board left and sticky, sized to the viewport; side panel right), one column on mobile. The side panel order is fixed: status line (Ready / Running at N ms/step / Paused / Won in N steps / Lost: reason), stats row (Steps, Treats, Best, Runs), run controls, palette and tapes, call stack, Help (key list, "All rules →") and the AI prompt card. Winning or losing opens the result modal (Try again · Next map · All maps); Next map starts the next map in `sortMaps` order with the same player name.
+- Keyboard: **R** resets when no program slot is focused (inside a slot R means turn right), **?** opens the shortcuts dialog (`lib/globalKeys.ts`).
+- Watch page: the same layout read-only — status line, stats, **Take over** (opens `/play/<id>`), tapes, call stack, AI prompt card.
 
 ### The board
 
@@ -306,7 +310,7 @@ Production runs at https://motor-programming.wricardo.net on a small ARM64 Ubunt
 ### Common changes
 
 - **Schema change:** edit `graph/schema.graphqls` → `make generate` → update `graph/convert.go` and resolvers → mirror in `frontend/src/lib/{queries,types}.ts` → update `llms.txt.tmpl` and `prompt.ts` if agents are affected → update the query copies in `api/hardening_test.go`.
-- **Engine change:** update the golden step counts in `game/engine/engine_test.go` and `validate/validate_test.go` (7, 17, 19, 46, 23, 30, 44, 80, 32, 48, 83 for the shipped solutions) on purpose, never just to make a failure go away.
+- **Engine change:** update the golden step counts in `game/engine/engine_test.go` and `validate/validate_test.go` (7, 17, 19, 46, 23, 30, 44, 80, 32, 48, 83, 65, 77, 57, 40, 30, 42 for the shipped solutions) on purpose, never just to make a failure go away.
 - **UI change:** `cd frontend && npm run check && npm test && npm run build:static` (or `make build-frontend`), then commit `static/`. If you skip the build, production keeps the old UI.
 - **New page:** add the route under `frontend/src/routes/`, add it to `spaRoutes` in `api/server.go`, and to the nav in `+layout.svelte` if needed.
 - **Dependencies:** don't run `go mod tidy` casually. `gqlgen generate` rewrites `go.mod`; re-`go get` anything it drops.

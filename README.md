@@ -35,7 +35,7 @@ Most of the game is spotting the pattern in the map and folding it into as few i
 
 ## Maps
 
-There are 11 maps, ordered from easy to hard:
+There are 17 maps, ordered from easy to hard:
 
 - **Levels 1–5** teach the basics: moving, turning, dodging rocks and your first subroutines.
 - **The harder maps** are designed so the brute-force route doesn't fit. You have to find the trick: nested subroutines, subroutines that triple each other, or a subroutine that calls itself.

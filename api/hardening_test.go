@@ -57,7 +57,7 @@ const (
 	posSel     = `x y`
 	mapSel     = `id name description difficulty width height layout start { x y } startFacing rocks { x y } treats { x y } mainTapeLength subTapeLengths maxSteps maxCallDepth allowRecursion`
 	eventSel   = `step instruction tapeIndex slotIndex from { x y } to { x y } facingBefore facingAfter blocked collected { x y } callStack { tape pc } status lossReason`
-	sessionSel = `id displayName mapId map { ` + mapSel + ` } program { main subs } vm { pos { x y } facing treatsRemaining { x y } callStack { tape pc } steps status lossReason visited { x y } } playing speedMs seq createdAt lastActionAt attempts lastEvent { ` + eventSel + ` }`
+	sessionSel = `id displayName mapId map { ` + mapSel + ` } program { main subs } vm { pos { x y } facing treatsRemaining { x y } callStack { tape pc } steps status lossReason visited { x y } } playing speedMs seq createdAt lastActionAt attempts bestSteps lastEvent { ` + eventSel + ` }`
 	sessionsQ  = `query Sessions($limit: Int, $sort: SessionSort, $mapId: ID) { sessions(sort: $sort, limit: $limit, mapId: $mapId) { id displayName mapId playing createdAt lastActionAt map { name } vm { status steps treatsRemaining { x y } } } }`
 )
 

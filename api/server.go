@@ -285,7 +285,7 @@ func (s *Server) handleLLMS(w http.ResponseWriter, r *http.Request) {
 
 // spaRoutes mirrors the top-level directories in frontend/src/routes.
 var spaRoutes = map[string]bool{
-	"": true, "play": true, "watch": true, "maps": true, "editor": true, "learn": true, "sessions": true,
+	"": true, "play": true, "watch": true, "maps": true, "editor": true, "learn": true, "sessions": true, "multi": true,
 }
 
 // isSPARoute reports whether the first path segment is a client-side route.

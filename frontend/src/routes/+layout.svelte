@@ -11,16 +11,19 @@
 
 	const navItems = [
 		{ href: '/', label: 'Play' },
-		{ href: '/learn', label: 'How it works' },
-		{ href: '/sessions', label: 'Sessions' },
 		{ href: '/maps', label: 'Maps' },
+		{ href: '/sessions', label: 'Sessions' },
+		{ href: '/learn', label: 'How it works' },
 		{ href: '/editor', label: 'Editor' }
 	];
 
 	function isActive(href: string, pathname: string): boolean {
-		if (href === '/') return pathname === '/' || pathname.startsWith('/play/') || pathname.startsWith('/watch/');
+		if (href === '/') return pathname === '/' || pathname.startsWith('/play/');
+		if (href === '/sessions') return pathname.startsWith('/sessions') || pathname.startsWith('/watch/') || pathname.startsWith('/multi');
 		return pathname === href || pathname.startsWith(`${href}/`);
 	}
+
+	const footerLink = 'hover:text-indigo-900 hover:underline';
 
 	// ssr=false so this always runs in the browser; safe to set the client synchronously.
 	if (browser) {
@@ -63,10 +66,35 @@
 		{@render children()}
 	</main>
 
-	<footer class="border-t border-indigo-200 bg-white px-6 py-4 text-xs text-slate-600 flex flex-wrap gap-4">
-		<span>Program the robot to collect every treat.</span>
-		<a href="/learn" class="underline">Rules</a>
-		<a href="/llms.txt" target="_blank" rel="noreferrer" class="underline">/llms.txt</a>
-		<a href="/graphql" target="_blank" rel="noreferrer" class="underline">GraphQL endpoint</a>
+	<footer class="border-t border-indigo-200 bg-white">
+		<div class="mx-auto grid max-w-6xl gap-8 px-4 sm:px-6 py-8 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
+			<div>
+				<p class="flex items-center gap-2 font-semibold text-indigo-950"><img src={favicon} alt="" class="h-5 w-5" />{TITLE}</p>
+				<p class="mt-2 text-xs leading-relaxed">Program the robot to collect every treat.</p>
+			</div>
+			<nav aria-label="Play">
+				<h2 class="text-xs font-semibold uppercase tracking-widest text-indigo-900">Play</h2>
+				<ul class="mt-2 space-y-1">
+					<li><a href="/" class={footerLink}>Home</a></li>
+					<li><a href="/maps" class={footerLink}>Maps</a></li>
+					<li><a href="/sessions" class={footerLink}>Sessions</a></li>
+					<li><a href="/editor" class={footerLink}>Editor</a></li>
+				</ul>
+			</nav>
+			<nav aria-label="Docs">
+				<h2 class="text-xs font-semibold uppercase tracking-widest text-indigo-900">Docs</h2>
+				<ul class="mt-2 space-y-1">
+					<li><a href="/learn" class={footerLink}>How it works</a></li>
+					<li><a href="/llms.txt" target="_blank" rel="noreferrer" class={footerLink}>/llms.txt</a></li>
+					<li><a href="/graphql" target="_blank" rel="noreferrer" class={footerLink}>GraphQL endpoint</a></li>
+				</ul>
+			</nav>
+			<nav aria-label="Tools">
+				<h2 class="text-xs font-semibold uppercase tracking-widest text-indigo-900">Tools</h2>
+				<ul class="mt-2 space-y-1">
+					<li><a href="/playground" target="_blank" rel="noreferrer" class={footerLink}>GraphQL Playground</a></li>
+				</ul>
+			</nav>
+		</div>
 	</footer>
 </div>

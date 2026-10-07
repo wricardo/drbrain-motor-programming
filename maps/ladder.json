@@ -1,0 +1,26 @@
+{
+  "id": "ladder",
+  "name": "Patterns 5 - Ladder",
+  "description": "A one-cell shaft with a treat in an alcove on each side of every second rung. Visit both alcoves, then climb two rows.",
+  "difficulty": "medium",
+  "layout": [
+    "###",
+    "#.#",
+    "*.*",
+    "#.#",
+    "*.*",
+    "#.#",
+    "*.*",
+    "#.#",
+    "*^*"
+  ],
+  "main_tape_length": 4,
+  "sub_tape_lengths": [
+    2,
+    8,
+    3
+  ],
+  "max_steps": 80,
+  "max_call_depth": 4,
+  "allow_recursion": false
+}

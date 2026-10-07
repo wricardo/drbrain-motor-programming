@@ -1,0 +1,18 @@
+{
+  "id": "mountain_range",
+  "name": "Recursion 4 - Mountain Range",
+  "description": "A ridge of five peaks. Recurse one up-and-over step: the robot climbs a peak, then drops back to the valley.",
+  "difficulty": "medium",
+  "layout": [
+    "..........",
+    ".*.*.*.*.*",
+    ">........."
+  ],
+  "main_tape_length": 3,
+  "sub_tape_lengths": [
+    9
+  ],
+  "max_steps": 50,
+  "max_call_depth": 7,
+  "allow_recursion": true
+}

@@ -89,6 +89,7 @@ export interface Session {
 	createdAt: string;
 	lastActionAt: string;
 	attempts: number;
+	bestSteps: number | null;
 	lastEvent: StepEvent | null;
 }
 

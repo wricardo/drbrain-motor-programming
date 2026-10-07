@@ -1,15 +1,16 @@
 <script lang="ts">
 	import { parseLayout } from '$lib/layout';
 
-	let { layout, label = '' }: { layout: string[]; label?: string } = $props();
+	/** fit: scale to fit inside a square parent (width as a share of the parent) instead of capping at 200px. */
+	let { layout, label = '', fit = false }: { layout: string[]; label?: string; fit?: boolean } = $props();
 
 	const parsed = $derived(parseLayout(layout));
 	const arrow = $derived(parsed.start ? { UP: '▲', RIGHT: '▶', DOWN: '▼', LEFT: '◀' }[parsed.start.facing] : '');
 </script>
 
 <div
-	class="grid gap-px bg-indigo-200 p-px rounded-md overflow-hidden w-full max-w-[200px]"
-	style="aspect-ratio: {parsed.width} / {parsed.height}; grid-template-columns: repeat({parsed.width}, minmax(0, 1fr)); grid-template-rows: repeat({parsed.height}, minmax(0, 1fr))"
+	class="grid gap-px bg-indigo-200 p-px rounded-md overflow-hidden {fit ? '' : 'w-full max-w-[200px]'}"
+	style="{fit ? `width: ${Math.min(1, parsed.width / Math.max(1, parsed.height)) * 100}%; ` : ''}aspect-ratio: {parsed.width} / {parsed.height}; grid-template-columns: repeat({parsed.width}, minmax(0, 1fr)); grid-template-rows: repeat({parsed.height}, minmax(0, 1fr))"
 	role="img"
 	aria-label={label || `Map preview ${parsed.width} by ${parsed.height}`}
 >

@@ -7,8 +7,9 @@
 	let {
 		map,
 		vm = null,
-		lastEvent = null
-	}: { map: GameMap; vm?: VMState | null; lastEvent?: StepEvent | null } = $props();
+		lastEvent = null,
+		compact = false
+	}: { map: GameMap; vm?: VMState | null; lastEvent?: StepEvent | null; compact?: boolean } = $props();
 
 	const CELL = 40;
 
@@ -33,8 +34,10 @@
 
 <svg
 	viewBox="0 0 {map.width * CELL} {map.height * CELL}"
-	class="w-full h-auto rounded-xl border border-indigo-200 bg-indigo-50 shadow-sm"
-	style="max-width: {Math.max(280, map.width * 56)}px"
+	class="mx-auto block w-full h-auto rounded-xl border border-indigo-200 bg-indigo-50 shadow-sm"
+	style="max-width: {compact
+		? `min(100%, calc(16rem * ${map.width / map.height}))`
+		: `max(280px, min(${map.width * 72}px, calc((100vh - 13rem) * ${map.width / map.height})))`}"
 	role="img"
 	aria-label={label}
 	data-testid="board"

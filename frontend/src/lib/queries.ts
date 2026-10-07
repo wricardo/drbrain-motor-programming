@@ -61,6 +61,7 @@ export const SESSION_FIELDS = `
   createdAt
   lastActionAt
   attempts
+  bestSteps
   lastEvent { ${STEP_EVENT_FIELDS} }
 `;
 

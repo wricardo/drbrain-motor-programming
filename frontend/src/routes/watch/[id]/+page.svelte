@@ -9,8 +9,8 @@
 	import Grid from '$lib/components/Grid.svelte';
 	import Stats from '$lib/components/Stats.svelte';
 	import Tape from '$lib/components/Tape.svelte';
-	import { lossReasonText } from '$lib/errors';
 	import { buildSessionPrompt } from '$lib/prompt';
+	import { statusLine } from '$lib/sessions';
 	import { createSessionStore } from '$lib/stores/session';
 	import { createSessionSource } from '$lib/stores/source';
 
@@ -21,19 +21,6 @@
 	const origin = typeof window !== 'undefined' ? window.location.origin : '';
 	const session = $derived($store.session);
 	const status = $derived(session?.vm.status ?? 'READY');
-	const label = $derived(
-		!session
-			? ''
-			: status === 'WON'
-				? `Won in ${session.vm.steps} steps`
-				: status === 'LOST'
-					? `Lost: ${lossReasonText(session.vm.lossReason)}`
-					: session.playing
-						? 'Running'
-						: status === 'READY'
-							? 'Waiting to start'
-							: 'Paused'
-	);
 </script>
 
 <svelte:head><title>{pageTitle(session ? `Watching ${session.map.name}` : 'Watch')}</title></svelte:head>
@@ -50,8 +37,8 @@
 	{:else}
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<div>
-				<h1 class="text-xl font-semibold text-indigo-950">Watching: {session.map.name}</h1>
-				<p class="text-xs text-slate-600">{session.displayName || 'Anonymous'} · read-only spectator view</p>
+				<h1 class="text-2xl font-semibold text-indigo-950">Watching: {session.map.name}</h1>
+				<p class="text-sm text-slate-600">{session.displayName || 'Anonymous'} · read-only spectator view</p>
 			</div>
 			<ConnectionBadge state={$store.connection} />
 		</div>
@@ -59,24 +46,31 @@
 			<p role="status" class="mt-2 text-xs text-amber-800">{$store.error.title}: retrying…</p>
 		{/if}
 
-		<div class="mt-4 grid gap-6 lg:grid-cols-2">
-			<section aria-label="Board" class="space-y-3">
+		<div class="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)]">
+			<section aria-label="Board" class="space-y-3 lg:sticky lg:top-4 lg:self-start">
 				<Grid map={session.map} vm={session.vm} lastEvent={session.lastEvent} />
-				<Stats {session} />
+				<p class="text-sm text-slate-600">{session.map.description}</p>
+			</section>
+			<section aria-label="Program" class="space-y-4">
 				<p
-					class="rounded-lg px-3 py-2 text-sm font-medium {status === 'WON'
+					class="rounded-lg px-3 py-2 text-sm font-semibold {status === 'WON'
 						? 'bg-emerald-50 text-emerald-900'
 						: status === 'LOST'
 							? 'bg-rose-50 text-rose-900'
-							: 'bg-indigo-50 text-indigo-900'}"
+							: session.playing
+								? 'bg-indigo-600 text-white'
+								: 'bg-indigo-50 text-indigo-900'}"
 					role="status"
 					aria-live="polite"
 					data-testid="watch-status"
 				>
-					{label}
+					{statusLine(session)}
 				</p>
-			</section>
-			<section aria-label="Program" class="space-y-4">
+				<Stats {session} />
+				<div class="flex flex-wrap items-center gap-3">
+					<a href="/play/{session.id}" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700" data-testid="take-over">Take over</a>
+					<a href="/" class="text-sm text-indigo-700 underline">Pick your own map</a>
+				</div>
 				<div class="rounded-xl border border-indigo-200 bg-white p-3">
 					<Tape
 						program={session.program}
@@ -89,9 +83,8 @@
 				<CallStack callStack={session.vm.callStack} maxCallDepth={session.map.maxCallDepth} />
 				<AiPromptCard
 					prompt={buildSessionPrompt(origin, session)}
-					blurb="Copy this prompt into an AI chat and it will program the robot to win session {session.id}."
+					blurb="Copy this prompt into an AI chat and it will program the robot to win this session."
 				/>
-				<a href="/" class="inline-block text-sm text-indigo-700 underline">Pick your own map</a>
 			</section>
 		</div>
 	{/if}

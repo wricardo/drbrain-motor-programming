@@ -19,13 +19,12 @@
 
 	const toc: [string, string][] = [
 		['#game', 'The game'],
-		['#board-h', 'The board'],
-		['#ins-h', 'Instructions'],
-		['#tape-h', 'Tapes & limits'],
-		['#rec-h', 'Subroutines'],
+		['#instructions', 'Instructions'],
+		['#rules', 'Rules'],
+		['#controls', 'Controls'],
 		['#ai', 'How an AI plays'],
 		['#connect', 'Let an AI play'],
-		['#strategies', 'Strategies']
+		['#tips', 'Tips']
 	];
 
 	const aiSteps: [string, string][] = [
@@ -51,15 +50,29 @@
 		['L / R', 'Turn left / right'],
 		['1 2 3', 'Call subroutine 1 / 2 / 3'],
 		['Backspace', 'Clear the slot'],
-		['Arrow keys', 'Move between slots']
+		['Arrow keys', 'Move between slots'],
+		['R (no slot focused)', 'Reset the robot to the start'],
+		['?', 'Show the keyboard shortcuts']
 	];
 </script>
 
 <svelte:head><title>{pageTitle('How it works')}</title></svelte:head>
 
 <div class="mx-auto max-w-3xl px-4 sm:px-6 py-8 space-y-10">
-	<section id="game" class="scroll-mt-6">
+	<header>
 		<h1 class="text-2xl font-semibold text-indigo-950">How {GAME} works</h1>
+		<p class="mt-3 text-slate-800">
+			A short guide to the robot, its instructions and the rules — and how to hand a session to an AI.
+		</p>
+		<nav aria-label="On this page" class="mt-4 flex flex-wrap gap-2 text-sm">
+			{#each toc as [href, label]}
+				<a {href} class="rounded-full border border-indigo-200 bg-white px-3 py-1 text-indigo-800 hover:bg-indigo-50">{label}</a>
+			{/each}
+		</nav>
+	</header>
+
+	<section id="game" class="scroll-mt-6" aria-labelledby="game-h">
+		<h2 id="game-h" class="text-xl font-semibold text-indigo-950">The game</h2>
 		<p class="mt-3 text-slate-800">
 			You don't drive the robot — you write it a program. Fill the tape slots with instructions, press <strong>Run</strong>, and the server
 			executes one instruction per step. The robot wins the moment the last treat
@@ -67,15 +80,7 @@
 			is collected. It is a puzzle about patterns: the tapes are short, so you win by noticing what repeats and reusing it with subroutines.
 			People build programs with clicks or drag and drop; AI agents write them through an API, and any run can be watched live.
 		</p>
-		<nav aria-label="On this page" class="mt-4 flex flex-wrap gap-2 text-sm">
-			{#each toc as [href, label]}
-				<a {href} class="rounded-full border border-indigo-200 bg-white px-3 py-1 text-indigo-800 hover:bg-indigo-50">{label}</a>
-			{/each}
-		</nav>
-	</section>
-
-	<section aria-labelledby="board-h">
-		<h2 id="board-h" class="text-xl font-semibold text-indigo-950">The board</h2>
+		<h3 id="board-h" class="mt-5 font-semibold text-indigo-950">The board</h3>
 		<ul class="mt-3 list-disc space-y-1 pl-5 text-slate-800">
 			<li>The robot starts on a fixed cell facing a fixed direction (shown by the arrow).</li>
 			<li>Rocks (<span class="inline-block h-3 w-3 rounded-sm bg-slate-500 align-middle"></span>) cannot be entered. The board edge is a wall too.</li>
@@ -87,8 +92,8 @@
 		</ul>
 	</section>
 
-	<section aria-labelledby="ins-h">
-		<h2 id="ins-h" class="text-xl font-semibold text-indigo-950">The instruction set</h2>
+	<section id="instructions" class="scroll-mt-6" aria-labelledby="ins-h">
+		<h2 id="ins-h" class="text-xl font-semibold text-indigo-950">Instructions</h2>
 		<ul class="mt-3 space-y-2">
 			{#each instructions as { ins, text } (ins)}
 				{@const meta = instructionMeta(ins)}
@@ -103,8 +108,9 @@
 		</ul>
 	</section>
 
-	<section aria-labelledby="tape-h">
-		<h2 id="tape-h" class="text-xl font-semibold text-indigo-950">Tapes, steps and limits</h2>
+	<section id="rules" class="scroll-mt-6" aria-labelledby="rules-h">
+		<h2 id="rules-h" class="text-xl font-semibold text-indigo-950">Rules</h2>
+		<h3 id="tape-h" class="mt-3 font-semibold text-indigo-950">Tapes, steps and limits</h3>
 		<ul class="mt-3 list-disc space-y-1 pl-5 text-slate-800">
 			<li>The <strong>main tape</strong> runs left to right. Each map also gives you 0–3 <strong>subroutine tapes</strong>; slot counts differ per map.</li>
 			<li>Every executed instruction (including a blocked move or a call) is one <strong>step</strong>. Empty slots are free.</li>
@@ -116,10 +122,7 @@
 			<li>Changing the program resets the robot to the start. While a run is playing the tapes are locked; pause first.</li>
 			<li>You can <strong>Step</strong> one instruction at a time. The highlighted slot is the next instruction; a dashed ring marks a call that is waiting for its subroutine to return; a yellow inner ring shows what just ran.</li>
 		</ul>
-	</section>
-
-	<section aria-labelledby="rec-h">
-		<h2 id="rec-h" class="text-xl font-semibold text-indigo-950">Subroutines and recursion</h2>
+		<h3 id="rec-h" class="mt-5 font-semibold text-indigo-950">Subroutines and recursion</h3>
 		<div class="mt-3 space-y-3 text-slate-800">
 			<p>
 				A <code>CALL_SUB_k</code> pushes a frame on the <strong>call stack</strong> and runs sub <em>k</em> from its first slot. When the sub reaches its end,
@@ -137,8 +140,8 @@
 		</div>
 	</section>
 
-	<section aria-labelledby="keys-h">
-		<h2 id="keys-h" class="text-xl font-semibold text-indigo-950">Keyboard &amp; drag-and-drop</h2>
+	<section id="controls" class="scroll-mt-6" aria-labelledby="keys-h">
+		<h2 id="keys-h" class="text-xl font-semibold text-indigo-950">Controls</h2>
 		<p class="mt-2 text-sm text-slate-800">Click a slot (or press Enter on it) to pick an instruction from a menu. Focus a slot (Tab) to use shortcuts. Typing an instruction key fills the slot and moves to the next one.</p>
 		<dl class="mt-3 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
 			{#each keys as [k, d]}
@@ -175,15 +178,14 @@
 		<div class="mt-3">
 			<AiPromptCard
 				prompt={genericPrompt}
-				title="Prompt for any AI agent"
 				blurb="Paste it into an AI chat that can make HTTP requests; it will read llms.txt, create a session and play to win."
 			/>
 		</div>
 		<p class="mt-3 text-sm"><a href="/llms.txt" target="_blank" rel="noreferrer" class="inline-block rounded-full bg-indigo-600 px-5 py-2 font-semibold text-white hover:bg-indigo-700">Open llms.txt</a></p>
 	</section>
 
-	<section id="strategies" class="scroll-mt-6" aria-labelledby="strat-h">
-		<h2 id="strat-h" class="text-xl font-semibold text-indigo-950">Strategies that work</h2>
+	<section id="tips" class="scroll-mt-6" aria-labelledby="strat-h">
+		<h2 id="strat-h" class="text-xl font-semibold text-indigo-950">Tips</h2>
 		<div class="mt-3 grid gap-3 sm:grid-cols-2">
 			{#each strategies as [title, desc]}
 				<div class="rounded-xl border border-indigo-100 bg-white p-4">

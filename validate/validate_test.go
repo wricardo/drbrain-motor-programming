@@ -58,6 +58,8 @@ func TestEveryMapSolutionWinsWithGoldenSteps(t *testing.T) {
 		"straight_line": 7, "turn_challenge": 17, "rock_obstacle": 19, "symmetric_paths": 46,
 		"zigzag_path": 23, "long_corridor": 30, "staircase": 44, "serpentine": 80,
 		"powers": 32, "pinwheel": 48, "bump_spiral": 83,
+		"comb": 65, "diamond_ring": 77, "ladder": 57, "mountain_range": 40,
+		"nested_doubling": 30, "switchback": 42,
 	}
 	files, _ := filepath.Glob(filepath.Join(mapsDir, "*.json"))
 	if len(files) != len(golden) {

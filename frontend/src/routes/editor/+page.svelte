@@ -6,7 +6,6 @@
 	import { getContextClient } from '@urql/svelte';
 	import { unwrap } from '$lib/api';
 	import { getAdminKey, setAdminKey } from '$lib/admin';
-	import MiniGrid from '$lib/components/MiniGrid.svelte';
 	import { describeError, type DescribedError } from '$lib/errors';
 	import {
 		MAX_SIDE,
@@ -253,10 +252,10 @@
 				</div>
 			</div>
 
-			<div class="overflow-auto rounded-xl border border-indigo-200 bg-white p-2">
+			<div class="rounded-xl border border-indigo-200 bg-white p-2">
 				<div
-					class="inline-grid gap-px bg-indigo-200 p-px select-none touch-none"
-					style="grid-template-columns: repeat({width}, 1.75rem)"
+					class="mx-auto grid gap-px bg-indigo-200 p-px select-none touch-none"
+					style="grid-template-columns: repeat({width}, minmax(0, 1fr)); max-width: min(100%, {width * 3}rem, calc((100vh - 14rem) * {width / height}))"
 					role="grid"
 					aria-label="Map cells, {width} by {height}"
 				>
@@ -266,7 +265,7 @@
 							{@const bad = unreachable.has(`${x},${y}`)}
 							<button
 								type="button"
-								class="flex h-7 w-7 items-center justify-center text-xs {tile === '#'
+								class="flex aspect-square w-full items-center justify-center text-sm {tile === '#'
 									? 'bg-slate-500'
 									: isStart
 										? 'bg-indigo-600 text-white'
@@ -287,7 +286,7 @@
 								{#if isStart && start}
 									<span aria-hidden="true">{arrows[start.facing]}</span>
 								{:else if tile === '*'}
-									<svg viewBox="-16 -16 32 32" class="h-5 w-5" aria-hidden="true"><Cookie cx={0} cy={0} /></svg>
+									<svg viewBox="-16 -16 32 32" class="h-3/4 w-3/4" aria-hidden="true"><Cookie cx={0} cy={0} /></svg>
 								{/if}
 							</button>
 						{/each}
@@ -311,11 +310,6 @@
 					{#each localIssues as issue}<li>{issue}</li>{/each}
 				</ul>
 			{/if}
-
-			<div>
-				<h2 class="text-sm font-semibold text-indigo-900">Preview</h2>
-				<MiniGrid {layout} />
-			</div>
 		</section>
 
 		<section aria-label="Map settings" class="space-y-3">

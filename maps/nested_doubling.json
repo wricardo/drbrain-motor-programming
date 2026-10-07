@@ -1,0 +1,20 @@
+{
+  "id": "nested_doubling",
+  "name": "Patterns 6 - Nested Doubling",
+  "description": "Sixteen cells, four treats, two-slot tapes and almost no spare steps. Build a block, double it, double it again.",
+  "difficulty": "hard",
+  "layout": [
+    "#################",
+    ">...*...*...*...*",
+    "#################"
+  ],
+  "main_tape_length": 2,
+  "sub_tape_lengths": [
+    2,
+    2,
+    2
+  ],
+  "max_steps": 32,
+  "max_call_depth": 3,
+  "allow_recursion": false
+}

@@ -1,0 +1,26 @@
+{
+  "id": "diamond_ring",
+  "name": "Patterns 7 - Diamond Ring",
+  "description": "Walk a diamond: four diagonal sides, a treat in the middle of each and on three corners. Build one diagonal step, then a side, then a side plus a turn.",
+  "difficulty": "hard",
+  "layout": [
+    "....*....",
+    ".........",
+    ".*.....*.",
+    ".........",
+    "*.......*",
+    ".........",
+    ".*.....*.",
+    ".........",
+    "....>...."
+  ],
+  "main_tape_length": 4,
+  "sub_tape_lengths": [
+    4,
+    4,
+    2
+  ],
+  "max_steps": 100,
+  "max_call_depth": 4,
+  "allow_recursion": false
+}

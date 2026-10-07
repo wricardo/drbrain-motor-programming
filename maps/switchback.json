@@ -1,0 +1,23 @@
+{
+  "id": "switchback",
+  "name": "Recursion 5 - Switchback",
+  "description": "A corridor that doubles back on itself. Recurse a two-row loop: run the row, turn, drop two rows, run back, turn, drop two more.",
+  "difficulty": "hard",
+  "layout": [
+    ">......",
+    "######.",
+    "......*",
+    ".######",
+    "*......",
+    "######.",
+    "*.....*"
+  ],
+  "main_tape_length": 2,
+  "sub_tape_lengths": [
+    6,
+    11
+  ],
+  "max_steps": 70,
+  "max_call_depth": 4,
+  "allow_recursion": true
+}
